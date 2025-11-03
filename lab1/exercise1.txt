@@ -1,0 +1,3 @@
+a It contains 19567 lines.
+b It contains 97676 words.
+c 14338 lines are not blank.
