@@ -1,0 +1,12 @@
+## Operators
+
+The values of `i` is 2, and the value of `j` is 1.
+
+The following code prints `b`.
+
+## References and Pointers
+
+The code 1 to 4 prints:
+
+10 10
+
