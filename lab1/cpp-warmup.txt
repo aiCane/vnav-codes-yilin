@@ -1,12 +1,27 @@
 ## Operators
 
-The values of `i` is 2, and the value of `j` is 1.
+1. The values of `i` is 2, and the value of `j` is 1.
 
-The following code prints `b`.
+2. The following code prints `b`.
 
 ## References and Pointers
 
-The code 1 to 4 prints:
+1. 10 10
 
-10 10
+2. 1764
+    > in C++, there's no `**`
 
+3. 0
+
+4. 0
+    > same as question 1, `i` is just a nick name of `j`
+
+## Numbers
+
+1. The differences are: `int` is always 4 bytes. In 64-bit systems, we need a longer integer, so `long` is 8 bytes, refers to the longest integer type in the system. However, the longest length in 32-bit system is 4 bytes, so `long` here is 4 bytes, which is a bit confusing. To solve this problem, we invent `long long` which is 8 bytes in both 32-bit and 64-bit systems. Btw, `short` is 2 bytes.
+
+2. The difference, simply, would be `float` is 8 bytes, and 'double' is 16 bytes. `i` here is 3.
+
+3. The difference is that `unsigned` moves the negative part all the way to the right, which makes the integer a larger, non-negative number. The value of `c` is 0xff, 255 I guess.
+
+4. The value of `i` is 0.
