@@ -14,12 +14,13 @@ RandomVector::RandomVector(int size, double max_val) {
 }
 
 void RandomVector::print() {
-    for (double it : vect) std::cout << it << std::endl;
+    for (double v : vect) std::cout << v << " ";
+    std::cout << std::endl;
 }
 
 double RandomVector::mean() {
     double mean_to_return = 0.0;
-    for (double it : vect) mean_to_return += it;
+    for (double v : vect) mean_to_return += v;
     mean_to_return /= vect.size();
     return mean_to_return;
     // return std::accumulate(vect.begin(), vect.end(), 0);
@@ -27,8 +28,8 @@ double RandomVector::mean() {
 
 double RandomVector::max(){
     double max_to_return = 0.0;
-    for (double it : vect) {
-        if (max_to_return < it) max_to_return = it;
+    for (double v : vect) {
+        if (max_to_return < v) max_to_return = v;
     }
     return max_to_return;
     // return *std::max_element(vect.begin(), vect.end()); // just like *void in C
@@ -36,8 +37,8 @@ double RandomVector::max(){
 
 double RandomVector::min(){
     double min_to_return = DBL_MAX;
-    for (double it : vect) {
-        if (it < min_to_return) min_to_return = it;
+    for (double v : vect) {
+        if (v < min_to_return) min_to_return = v;
     }
     return min_to_return;
     // return *std::min_element(vect.begin(), vect.end());
@@ -49,31 +50,36 @@ void RandomVector::printHistogram(int bins){
     double bin_length = (max() - min_value) / bins;
     std::vector<double> separaters, sorted_vect = vect;
     std::vector<int> volumns;
-    int max_volumn = 0, j = 0;
+    int temp_max, max_volumn = 0, j = 0;
 
-    volumns.push_back(0);
-    for (int i = 1; i < bins; i++) {
+    for (int i = 0; i < bins; i++) {
         volumns.push_back(0);
         min_value += bin_length;
         separaters.push_back(min_value);
     }
 
     mySort(sorted_vect);
-    for (double it : sorted_vect) {
-        if (it < separaters.at(j)) {
+    for (double v : sorted_vect) {
+        if (v <= separaters.at(j)) {
             volumns.at(j)++;
             continue;
         }
         if (max_volumn < volumns.at(j)) max_volumn = volumns.at(j);
-        j++;
+        volumns.at(++j)++;
     }
 
+    temp_max = max_volumn;
     for (int i = 0; i < max_volumn; i++) {
-        for (int volumn : volumns) {
-            if (volumn < max_volumn) continue;
-            volumn--;
-            std::cout << "*** " << std::endl;
+        for (j = 0; j < bins; j++) {
+            if (volumns.at(j) < temp_max) {
+                std::cout << "    ";
+                continue;
+            }
+            volumns.at(j)--;
+            std::cout << "*** ";
         }
+        temp_max--;
+        std::cout << std::endl;
     }
 }
 
