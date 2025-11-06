@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ros/vnav-codes-yilin/lab1/lab1_demo/mylib.cpp
+string
+-
+mylib.hpp
+/home/ros/vnav-codes-yilin/lab1/lab1_demo/mylib.hpp
+
+/home/ros/vnav-codes-yilin/lab1/lab1_demo/mylib.hpp
+string
+-
+
