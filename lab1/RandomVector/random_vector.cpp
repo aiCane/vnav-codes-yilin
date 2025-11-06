@@ -2,6 +2,7 @@
 #include <cfloat>
 #include <iostream>
 #include <random>
+#include <vector>
 // #include <algorithm>
 // #include <numeric>
 
@@ -53,5 +54,14 @@ double RandomVector::min(){
 }
 
 void RandomVector::printHistogram(int bins){
-  // TODO: Write your code here
+    // TODO: bins == 0 or bins == 1
+    double min_value = min();
+    double bin_length = (max() - min_value) / bins;
+    std::vector<double> separaters, volumns;
+    for (int i = 1; i < bins; i++) {
+        separaters.push_back(min_value + i * bin_length);
+    }
+    for (double it : vect) {
+        vect.pop_back();
+    }
 }
