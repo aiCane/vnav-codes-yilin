@@ -44,41 +44,78 @@ double RandomVector::min(){
     // return *std::min_element(vect.begin(), vect.end());
 }
 
-void RandomVector::printHistogram(int bins){
-    // TODO: bins == 0 or bins == 1
+// void RandomVector::printHistogram(int bins){
+//     // TODO: bins == 0 or bins == 1
+//     double min_value = min();
+//     double bin_length = (max() - min_value) / bins;
+//     std::vector<double> separaters, sorted_vect = vect;
+//     std::vector<int> volumns;
+//     int temp_max, max_volumn = 0, j = 0;
+
+//     for (int i = 0; i < bins; i++) {
+//         volumns.push_back(0);
+//         min_value += bin_length;
+//         separaters.push_back(min_value);
+//     }
+
+//     mySort(sorted_vect);
+//     for (double v : sorted_vect) {
+//         if (v <= separaters.at(j)) {
+//             volumns.at(j)++;
+//             continue;
+//         }
+//         if (max_volumn < volumns.at(j)) max_volumn = volumns.at(j);
+//         volumns.at(++j)++;
+//     }
+
+//     temp_max = max_volumn;
+//     for (int i = 0; i < max_volumn; i++) {
+//         for (j = 0; j < bins; j++) {
+//             if (volumns.at(j) < temp_max) {
+//                 std::cout << "    ";
+//                 continue;
+//             }
+//             volumns.at(j)--;
+//             std::cout << "*** ";
+//         }
+//         temp_max--;
+//         std::cout << std::endl;
+//     }
+// }
+void RandomVector::printHistogram(int bins) {
+    if (bins <= 0) return;
+
     double min_value = min();
     double bin_length = (max() - min_value) / bins;
-    std::vector<double> separaters, sorted_vect = vect;
-    std::vector<int> volumns;
-    int temp_max, max_volumn = 0, j = 0;
+    int max_volume = 0, j = 0;
+    std::vector<double> separators, sorted_vect = vect;
+    std::vector<int> volumes;
 
+    // init volumns, separators
     for (int i = 0; i < bins; i++) {
-        volumns.push_back(0);
+        volumes.push_back(0);
         min_value += bin_length;
-        separaters.push_back(min_value);
+        separators.push_back(min_value);
     }
 
     mySort(sorted_vect);
     for (double v : sorted_vect) {
-        if (v <= separaters.at(j)) {
-            volumns.at(j)++;
-            continue;
-        }
-        if (max_volumn < volumns.at(j)) max_volumn = volumns.at(j);
-        volumns.at(++j)++;
+        while (j < bins - 1 && separators[j] < v) j++;
+        if (j < bins) volumes[j]++;
     }
 
-    temp_max = max_volumn;
-    for (int i = 0; i < max_volumn; i++) {
+    for (int volume : volumes) {
+        if (max_volume < volume) max_volume = volume;
+    }
+
+    for (int i = 0; i < max_volume; i++) {
         for (j = 0; j < bins; j++) {
-            if (volumns.at(j) < temp_max) {
-                std::cout << "    ";
+            if (max_volume - i <= volumes[j]) {
+                std::cout << "*** ";
                 continue;
             }
-            volumns.at(j)--;
-            std::cout << "*** ";
+            std::cout << "    ";
         }
-        temp_max--;
         std::cout << std::endl;
     }
 }
