@@ -1,0 +1,369 @@
+\documentclass[12pt,a4paper,twoside]{article}
+
+% are used to comment out text
+
+%------------------------------------------------------------------------------------------------------------
+%EDIT THESE FIELDS WITH YOUR DETAILS
+%------------------------------------------------------------------------------------------------------------
+\newcommand{\studentname}{Yilin Zhang}
+\newcommand{\studentnumber}{23020036094}
+
+\title{Lab 1 Report}
+
+%\newcommand{\tutor}{Fan Hao}
+\newcommand{\labgroup}{None}
+\newcommand{\labdate}{11th Nov 2025}
+\newcommand{\reportdate}{\today}
+%------------------------------------------------------------------------------------------------------------
+
+%------------------------------------------------------------------------------------------------------------
+%PACKAGES. PACKAGES ARE USED TO EXTEND THE FUNCTIONALITY OF LATEX. YOU SHOULDN'T
+%NEED ANY MORE, SPEND YOUR TIME ON THE CONTENT!
+%------------------------------------------------------------------------------------------------------------
+
+\usepackage[a4paper,left=25mm,right=25mm,bottom=25mm,top=25mm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{subfigure}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{booktabs}
+\usepackage[british]{babel}
+\usepackage[square,comma,numbers,sort&compress]{natbib}
+\usepackage{csvsimple}
+\usepackage{graphicx}
+% \usepackage{pgfplotstable,filecontents}
+\usepackage{pgfplotstable}
+\usepackage{gensymb}
+\usepackage{array}
+\usepackage{tabu}
+\usepackage{multirow}
+% \usepackage{url}
+\usepackage{minted}
+\usepackage{enumitem}
+\pgfplotsset{compat=1.9}% supress warning
+\setlength{\headheight}{14.5pt}
+\setminted{
+	breaklines=true,
+	breakanywhere=true,
+}
+%------------------------------------------------------------------------------------------------------------
+
+%------------------------------------------------------------------------------------------------------------
+%DO NOT EDIT THESE FIELDS
+%------------------------------------------------------------------------------------------------------------
+\setlength{\parindent}{0em}
+\setlength{\parskip}{0.5em}
+\author{\studentname ~ \studentnumber. Lab group: \labgroup.}
+\date{Lab date: \labdate. Report date: \reportdate.}
+
+\renewcommand\abstractname{Summary}
+
+\pagestyle{fancy}
+\fancyhead{}
+\fancyhead[C]{\studentname~\studentnumber}
+\fancyfoot{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\renewcommand\bibname{References}
+
+%------------------------------------------------------------------------------------------------------------
+
+%\renewcommand\abstractname{Abstract}
+\begin{document}
+
+\maketitle
+
+%------------------------------------------------------------------------------------------------------------
+%YOUR REPORT BEGINS HERE
+%------------------------------------------------------------------------------------------------------------
+\section{Install Ubuntu 20.04}
+
+I own a x86\_64 intel CPU PC, with two hard disks in it. Sadly, non of them runs a Ubuntu desktop, because beside a Windows 11 system, I chose Fedora Workstation as my second PC system. Since Fedora and Ubuntu are both GNU-Linux system, I desided to install Ubuntu as a vertual machine within Fedora.
+
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=\linewidth]{figures/boxes}
+	\caption{Box app in Fedora 43 system contains several Ubuntu virtual machines.}
+\end{figure}
+
+I didn't chose tsinghua mirror, but ustc mirror instead \cite{USTCUbuntuMirror}. Because using ustc mirror is much more convenient: Only a few commands needs to be copied.
+
+\begin{minted}{bash}
+sudo sed -i 's@//.*archive.ubuntu.com@//mirrors.ustc.edu.cn@g' /etc/apt/sources.list
+sudo sed -i 's/security.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list
+sudo sed -i 's/http:/https:/g' /etc/apt/sources.list
+sudo apt-get update
+\end{minted}
+
+\section{Install packages}
+
+Run the command below, nothing special. By the way, the are already installed in a new build system, ``Nothing to do''.
+
+\begin{minted}{bash}
+sudo apt install build-essential cmake git
+\end{minted}
+
+\section{Git and C++}
+
+\begin{itemize}
+	\item \textbf{Git} usage are showed in \cref{sec:exercises}.
+	\item \textbf{C++}: Just simply follow the guild. The building experience are showed below.
+\end{itemize}
+
+\begin{minted}{console}
+(base) ros@ros:~/vnav-codes-yilin/lab1/lab1_demo/build$ cmake ..
+-- COnfiguring done
+-- Generating done
+-- Build files have been written to: /home/ros/vnav-codes-yilin/lab1/lab1_demo/build
+(base) ros@ros:-/vnav-codes-yilin/lab1/lab1_demo/build$ make
+Scanning dependencies of target mylib
+[ 25%] Building CXX object CMakeFiles/mylib.dir/mylib.cpp.o
+[ 50%] Linking CXX static library libmylib.a
+[ 50%] Built target mylib
+Scanning dependencies of target main
+[ 75%] Building CXX object CMakeFiles/main.dir/main.cpp.o
+[100%] Linking CXX executable main
+[100%] Built target main
+\end{minted}
+
+Then just run the \texttt{``main''} command.
+
+\begin{minted}{console}
+(base) ros@ros:-/vnav-codes-yilin/lab1/lab1_demo/build$ ls
+CMakeCache.txt  CMakeFiles  cmake_install.cmake  libmylib.a  main  Makefile
+(base) ros@ros:-/vnav-codes-yilin/lab1/lab1_demo/build$ ./main
+Hello world!
+In library
+\end{minted}
+
+\begin{figure}[h!tbp]
+	\centering
+	\includegraphics[width=\linewidth]{figures/screenshot}
+	\caption{A screenshot of cmake demo's result}
+\end{figure}
+
+\section{Exercises} % (fold)
+\label{sec:exercises}
+
+\subsection*{Git}
+
+I forked a copy under my own GitHub account \href{https://github.com/aiCane/vnav-codes-yilin}{here} from this \href{https://github.com/ouc-vlab-course/vnav-codes}{OUC vlab cource}.
+
+\subsection*{Shell}
+
+\subsubsection*{1. Answer to the following questions}
+
+\begin{itemize}
+	\item I installed a proxy tool on my ubuntu, therefore, I could \texttt{``wget''} dante.txt smoothly.
+	\item This question needs to use command \texttt{``wc''}.
+		\begin{enumerate}[label=\alph*.]
+			\item It contains \textbf{19567} lines.
+			\item It contains \textbf{97676} words.
+			\item \textbf{14338} lines are not blank.
+		\end{enumerate}
+\end{itemize}
+
+\subsubsection*{2. Output redirecting}
+
+I did \texttt{``fortune >> fortunes.txt''} in this question. The result can be seen using \texttt{``cat''}:
+\begin{minted}{text}
+If you sow your wild oats, hope for a crop failure.
+You tread upon my patience.
+		-- William Shakespeare, "Henry IV"
+Q:	How did you get into artificial intelligence?
+A:	Seemed logical -- I didn't have any real intelligence.
+You will be called upon to help a friend in trouble.
+We should be careful to get out of an experience only the wisdom that is
+in it - and stay there, lest we be like the cat that sits down on a hot
+stove-lid.  She will never sit down on a hot stove-lid again - and that
+is well; but also she will never sit down on a cold one any more.
+		-- Mark Twain
+\end{minted}
+
+\subsection*{C++: Warm-up Exercises}
+
+\subsubsection*{Operators}
+
+\begin{enumerate}
+	\item The values of \texttt{``i''} is 2, and the value of \texttt{``j''} is 1.
+	\item The following code prints \texttt{``b''}.
+\end{enumerate}
+
+\subsubsection*{References and Pointers}
+
+\begin{minted}{c++}
+10 10
+\end{minted}
+
+\begin{minted}{c++}
+1764
+\end{minted}
+
+\begin{minted}{c++}
+0
+\end{minted}
+
+\begin{minted}{c++}
+0
+\end{minted}
+
+\subsubsection*{Numbers}
+
+\begin{enumerate}
+	\item The differences are: `int` is always 4 bytes. In 64-bit systems, we need a longer integer, so `long` is 8 bytes, refers to the longest integer type in the system. However, the longest length in 32-bit system is 4 bytes, so `long` here is 4 bytes, which is a bit confusing. To solve this problem, we invent `long long` which is 8 bytes in both 32-bit and 64-bit systems. Btw, `short` is 2 bytes.
+	\item The difference, simply, would be `float` is 8 bytes, and 'double' is 16 bytes. `i` here is 3.
+	\item The difference is that `unsigned` moves the negative part all the way to the right, which makes the integer a larger, non-negative number. The value of `c` is 0xff, 255 I guess.
+	\item The value of `i` is 0.
+\end{enumerate}
+
+\subsection*{C++: RandomVector}
+
+All compliments are posted in the file \texttt{``random\_vector.cpp''} below. \cite{vector, algorithm} I used an extra private method \texttt{``void mySort(std::vector<double> \& vect)''} here to help print histogram. Any sort method can be used here, and I chose bubble sort.
+
+\begin{minted}{c++}
+#include "random_vector.h"
+#include <cfloat>
+#include <iostream>
+#include <random>
+#include <vector>
+// #include <algorithm>
+// #include <numeric>
+
+RandomVector::RandomVector(int size, double max_val) {
+    std::random_device rd;
+    std::mt19937 eng(rd()); // Mersenne Twister 19937
+    std::uniform_real_distribution<double> distr(0.0, max_val);
+    for (int i = 0; i < size; i++) vect.push_back(distr(eng));
+}
+
+void RandomVector::print() {
+    for (double v : vect) std::cout << v << " ";
+    std::cout << std::endl;
+}
+
+double RandomVector::mean() {
+    double mean_to_return = 0.0;
+    for (double v : vect) mean_to_return += v;
+    mean_to_return /= vect.size();
+    return mean_to_return;
+    // return std::accumulate(vect.begin(), vect.end(), 0);
+}
+
+double RandomVector::max(){
+    double max_to_return = 0.0;
+    for (double v : vect) {
+        if (max_to_return < v) max_to_return = v;
+    }
+    return max_to_return;
+    // return *std::max_element(vect.begin(), vect.end()); // just like *void in C
+}
+
+double RandomVector::min(){
+    double min_to_return = DBL_MAX;
+    for (double v : vect) {
+        if (v < min_to_return) min_to_return = v;
+    }
+    return min_to_return;
+    // return *std::min_element(vect.begin(), vect.end());
+}
+
+void RandomVector::printHistogram(int bins) {
+    if (bins <= 0) return;
+
+    double min_value = min();
+    double bin_length = (max() - min_value) / bins;
+    int max_volume = 0, j = 0;
+    std::vector<double> separators, sorted_vect = vect;
+    std::vector<int> volumes;
+
+    // init volumes, separators
+    for (int i = 0; i < bins; i++) {
+        volumes.push_back(0);
+        min_value += bin_length;
+        separators.push_back(min_value);
+    }
+
+    mySort(sorted_vect);
+    for (double v : sorted_vect) {
+        while (j < bins - 1 && separators[j] < v) j++;
+        if (j < bins) volumes[j]++;
+    }
+
+    for (int volume : volumes) {
+        if (max_volume < volume) max_volume = volume;
+    }
+
+    for (int i = 0; i < max_volume; i++) {
+        for (j = 0; j < bins; j++) {
+            if (max_volume - i <= volumes[j]) {
+                std::cout << "*** ";
+                continue;
+            }
+            std::cout << "    ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+void RandomVector::mySort(std::vector<double> & vect) {
+    // bubble sort
+    int len = vect.size();
+    double temp;
+    for (int i = len - 1; i > 0; --i) {
+        for (int j = 0; j < i; ++j) {
+            if (vect[j] > vect[j + 1]) {
+                temp = vect[j];
+                vect[j] = vect[j + 1];
+                vect[j + 1] = temp;
+            }
+        }
+    }
+}
+\end{minted}
+
+\texttt{``void printHistogram(int bins)''} here is the one needs to explain, the others are too easy. It can be seperated into 4 steps:
+
+\begin{enumerate}
+    \item \textbf{Inicialize volumes and separaters}: The counting result can be seen as several volumes with its height of the numbers. And there are bins numbers of volumes. I used the same number of separaters to devide them, with each separater is the largest number of the linear \texttt{``min()''} value to the \texttt{``max()''} value.
+        Take \texttt{``bins == 5''} for example, these two viriables are set to \texttt{``{0, 0, 0, 0, 0}''} and \texttt{``{0.2, 0.4, 0.6, 0.8, 1.0}''}.
+    \item \textbf{Fill volumes}: One easy way to count how many numbers are in a particular volumn is to sort the whole vector first, therefore, a \texttt{``sort()''} method may be used. Then we simply put a printer to the first value of the separaters, compare all numbers in the vector, and see whether they are smaller then this value. Thus, the first volumn ended adds up. Then the second, the third...
+    \item \textbf{Find the highest volume}: This step prepares the maximum count for the next step.
+    \item \textbf{Print the result}: I used one for loop in another to make it a squared space. In the inner loop, each height of the volumes are compared to the maximum number in step below. On the top there's usually only one or two volumes that needs to be printed, then line by line to the bottom.
+\end{enumerate}
+
+\begin{figure}[h!tbp]
+    \centering
+    \includegraphics[width=\linewidth]{figures/random-results}
+    \caption{The random results of C++ exercise.}
+\end{figure}
+
+\subsubsection*{Optional}
+There are some comments in my code, they are the easy ways with the functions in the header \texttt{``<algorithm>''}.
+
+% section exercises (end)
+
+\section{Some words}
+
+I own a Proxmox VE machine, and have already installed Linux systems over a hundred times, I suppose. Configuring Ubuntu is not a big deal for me. Nevertheless, \textbf{C++} is an entirely new language to me. The last exercise took me more than 3 days! I can't forgive that because it shouldn't have been such a problem.
+
+But I have \textbf{something else} to say. I wrote this down, feeling somewhat aggrieved, and I apologize for that first. The first time I heard we would use an MIT course in our robotics curriculum, I was quite happy to see OUC adopting state-of-the-art tutorials, though also a little scared of its difficulty. I finished lab1 with great enthusiasm and went to submit my homework. Then, I found a "LaTeX" report requirement on the website. I thought, okay, maybe the OUC teachers want to improve our ability to write lab reports. That's fine.
+
+The point is, I later heard from classmates that we are not only required to complete the exercises MIT students do but also \textbf{include the entire process of Lab1}! That is ridiculous! Documenting everything about installing a new Ubuntu system and configuring its environment is utterly \textbf{meaningless}! Even MIT students don't have to submit all that, so why should we? These are just silly, step-by-step instructions that my grandma could follow! \textbf{THERE IS NO NEED TO DOCUMENT EVERYTHING!}
+
+In my opinion, we should focus on what we truly need to learn. The MIT website for this course offers a clear, complete guide with a straightforward grading standard. Perhaps just replicating their experience would be better than this. Please forward this to our teacher; we need to make a change.
+
+%------------------------------------------------------------------------------------------------------------
+%YOUR REPORT ENDS HERE, THEN THE BIBLIOGRAPHY IS CREATED AND DOCUMENT ENDED
+%------------------------------------------------------------------------------------------------------------
+
+\bibliographystyle{unsrtnat}
+\bibliography{refs}
+
+%------------------------------------------------------------------------------------------------------------
+%BELOW ARE JUST EXAMPLE SECTIONS TO HELP YOU - PLEASE DELETE THEM
+%------------------------------------------------------------------------------------------------------------
+
+\end{document}
