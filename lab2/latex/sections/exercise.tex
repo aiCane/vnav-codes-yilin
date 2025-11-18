@@ -1,0 +1,435 @@
+\section{Exercise}
+
+\subsection{Basic ROS commands} % (fold)
+\label{sub:basic_ros_commands}
+
+\subsubsection{Deliverable 1 - Nodes, topics, launch files} % (fold)
+\label{ssub:deliverable_1_nodes_topics_launch_files}
+
+\textbf{1.} List the nodes running in the two-drone static scenario.
+
+I used the \texttt{rqt\_graph} method in a new terminal, unchecked the Debug option, and downloaded the figure, shown in figure~\ref{fig:rosgraph}.
+
+\begin{enumerate}
+	\item /av1broadcaster
+	\item /av2broadcaster
+	\item /plots\_publisher\_node
+	\item /rviz
+\end{enumerate}
+
+\textbf{2.} How could you run the two-drone static scenario without using the roslaunch command? List the commands that you would have to execute, in separate terminals, to achieve the same result.
+
+Just simply run every node in \textit{question 1} one by one. Such as:
+
+\begin{minted}[fontsize=\normalsize]{bash}
+rosrun av1broadcaster
+rosrun av2broadcaster
+rosrun plots_publisher_node
+rosrun rviz
+\end{minted}
+
+\textbf{3.} List the topics that each node publishes / subscribes to. What nodes are responsible for publishing the av1, av2, frames? Which topic causes rViz to plot the drone meshes?
+
+In the figure that \texttt{rqt\_graph} method in \textit{question 1}, we can switch the \textit{Node only} to the \textit{Node/Topics (all)} mode. We can see that
+
+\begin{itemize}
+	\item Node \texttt{/tf} are resbonsible for publishing the av1 and av2;
+	\item Node \texttt{/visuals} points to \texttt{/rviz} and it points to \texttt{/rosout}.
+\end{itemize}
+
+\textbf{4.} What changes if we omit \texttt{static:=True?} Why?
+
+You can't see those two drones, because in \texttt{two\_drones.launch}\ref{ssub:a_deliverable_1_nodes_topics_launch_files} it says so. The first line says \texttt{static} is set to \texttt{false} by default. And the code generation of two drones are in a \textit{if} condition fork. If static is false, these code will not run.
+
+% subsubsection deliverable_1_nodes_topics_launch_files (end)
+
+% subsection basic_ros_commands (end)
+
+\subsection{Publishing the transforms using tf} % (fold)
+\label{sub:publishing_the_transforms_using_tf}
+
+\subsubsection{Deliverable 2 - Publishing transforms} % (fold)
+\label{ssub:deliverable_2_publishing_transforms}
+
+We use this time to minus the last time, like
+
+\begin{minted}[fontsize=\normalsize]{cpp}
+double time = (ros::Time::now() - startup_time).toSec();
+\end{minted}
+
+which returns a ros::Time object. Then we use \texttt{toSec()} to transfer it to a second time, and store it into a double variable. The second step \textit{av1} and \textit{av2}'s origin, rotation and frame\_ids are set. And finally, they are published by using \texttt{sendTransform} as a method in \texttt{tf2\_ros::TransformBroadcaster}. The whole \texttt{C++} code are pasted in appendix~\ref{ssub:a_deliverable_2_publishing_transforms}.
+
+% subsubsection deliverable_2_publishing_transforms (end)
+
+\subsubsection{Changing the rViz fixed reference frame} % (fold)
+\label{ssub:changing_the_rviz_fixed_reference_frame}
+
+I changed the Fixed Frame in Global Options in the left from \textit{world} to \textit{av1}, and suddenly av1 stopped moving! The world starts to spit and \textit{av2} moves in a circular shape.
+
+% subsubsection changing_the_rviz_fixed_reference_frame (end)
+
+\subsubsection{Deliverable 3 - Looking up a transform} % (fold)
+\label{ssub:deliverable_3_looking_up_a_transform}
+
+I added the code below to transfer frames. The whole code file are pasted in appendix~\ref{ssub:a_deliverable_3_looking_up_a_transform}.
+
+\begin{minted}[fontsize=\normalsize]{cpp}
+transform = parant->tf_buffer.lookupTransform(
+	ref_frame,
+	dest_frame,
+	ros::Time(0),
+	ros::Duration(0.1)
+);
+\end{minted}
+
+% subsubsection deliverable_3_looking_up_a_transform (end)
+
+% subsection publishing_the_transforms_using_tf (end)
+
+\subsection{Let’s do some math} % (fold)
+\label{sub:let_s_do_some_math}
+
+\subsubsection{Deliverable 4 - Mathematical derivations} % (fold)
+\label{ssub:deliverable_4_mathematical_derivations}
+
+We are required to explicitly write down all the homogeneous transformation matrices used in the process and precisely outline the logic and algebraic steps taken.
+
+\textbf{1.} In the problem formulation~\ref{sub:a_problem_formulation}, we mentioned that AV2’s trajectory is an arc of parabola in the $x-z$ plane of the world frame. Can you prove this statement?
+
+Since
+
+\begin{align*}
+	cos(2t)\;&=\;1\:-\:2\,sin^{2}(t),
+\end{align*}
+
+we have
+
+\begin{align}
+	z\;=\;1\:-\:2\,x^2,
+\end{align}
+
+which is an arc of parabola.
+
+\textbf{2.} Compute $o^{1}_{2}(t)$, i.e., the position of AV2 relative to AV1’s body frame as a function of $t$.
+
+We know that:
+
+\begin{align}
+	T_2^1\;=\;(T_1^w)^{-1}\:\cdot\:T_2^w .
+\end{align}
+
+And since
+
+\begin{empheq}[left={\empheqlbrace}]{align*}
+	R_1^w &= \begin{bmatrix}
+	\cos t & -\sin t & 0 \\
+	\sin t & \cos t & 0 \\
+	0 & 0 & 1
+	\end{bmatrix}, \\
+	o_1^w &= [\cos t, \sin t, 0]^\top,
+\end{empheq}
+
+we have its homogeneous transformation as
+
+\begin{align*}
+	T_1^w = \begin{bmatrix}
+	R_1^w & o_1^w \\
+	\mathbf{0}^T & 1
+	\end{bmatrix} = \begin{bmatrix}
+	\cos t & -\sin t & 0 & \cos t \\
+	\sin t & \cos t & 0 & \sin t \\
+	0 & 0 & 1 & 0 \\
+	0 & 0 & 0 & 1
+	\end{bmatrix}.
+\end{align*}
+
+In robotics
+
+\begin{align*}
+	T^{-1} = \begin{bmatrix}
+		R^\top & -R^\top \cdot o \\
+		0^\top & 1
+	\end{bmatrix},
+\end{align*}
+
+so,
+
+\begin{align}
+	{T_1^w}^{-1} = \begin{bmatrix}
+		\cos t & -\sin t & 0 & -1 \\
+		\sin t & \cos t & 0 & 0 \\
+		0 & 0 & 1 & 0 \\
+		0 & 0 & 0 & 1
+	\end{bmatrix}.
+\end{align}
+
+Similarly, $T_2^w$'s homogeneous transformation is
+
+\begin{align}
+	T_2^w = \begin{bmatrix}
+	I & o_2^w \\
+	\mathbf{0}^T & 1
+	\end{bmatrix} = \begin{bmatrix}
+	1 & 0 & 0 & \sin t \\
+	0 & 1 & 0 & 0 \\
+	0 & 0 & 1 & \cos(2t) \\
+	0 & 0 & 0 & 1
+	\end{bmatrix}.
+\end{align}
+
+Thus,
+
+\begin{equation*}
+\begin{split}
+	T_2^1 &= (T_1^w)^\top \, T_2^w \\
+	      &= \begin{bmatrix}
+					\cos t & -\sin t & 0 & -1 \\
+					\sin t & \cos t & 0 & 0 \\
+					0 & 0 & 1 & 0 \\
+					0 & 0 & 0 & 1
+				\end{bmatrix} \cdot \begin{bmatrix}
+					1 & 0 & 0 & \sin t \\
+					0 & 1 & 0 & 0 \\
+					0 & 0 & 1 & \cos(2t) \\
+					0 & 0 & 0 & 1
+				\end{bmatrix} \\
+				&= \begin{bmatrix}
+					\cos t & -\sin t & 0 & \cos t\sin t-1 \\
+					\sin t & \cos t & 0 & \sin^2 t \\
+					0 & 0 & 1 & 0 \\
+					0 & 0 & 0 & 1
+				\end{bmatrix}.
+\end{split}
+\end{equation*}
+
+That is,
+
+\begin{align}
+	o_2^1(t) = \begin{bmatrix}
+		\cos t \cdot \sin t-1 & -\sin^2 t & \cos 2t
+	\end{bmatrix}^\top.
+\end{align}
+
+\textbf{3.} Show that $o^{1}_{2}(t)$ describes a planar curve and find the equation of its plane $\Pi$.
+
+Since
+
+\begin{equation*}
+\begin{split}
+	z(t) &= \cos 2t \\
+			 &= 1 - 2 \sin^2 t \\
+			 &= 1 + 2 y(t),
+\end{split}
+\end{equation*}
+
+we have the every point of the curve satisfying the linear equation
+
+\begin{align}
+	z - 2y = 1,
+\end{align}
+
+which is also the equation of $o_2^1$'s plane $\Pi$.
+
+\textbf{4.} Rewrite the above trajectory explicitly using a 2D frame of reference $(x_p,y_p)$ on the plane found before. Try to ensure that the curve is centered at the origin of this 2D frame and that $x_p$, $y_p$ are axes of symmetry for the curve.
+
+The ``HINT'' says the new origen of the frame is
+
+\begin{align}
+p' = (-1, -\frac{1}{2}, 0)^\top.
+\end{align}
+
+So we have
+
+\begin{equation}
+\begin{split}
+	o(t) &= o_1^1(t) - p' \\
+			 &= \begin{bmatrix}
+				 \cos t \cdot \sin t-1 \\
+				 -\sin^2 t \\
+				 \cos 2t
+			 \end{bmatrix} - \begin{bmatrix}
+			 	 -1 \\
+			 	 -\frac{1}{2} \\
+			 	 0
+			 \end{bmatrix} \\
+			 &= \begin{bmatrix}
+				 \cos t \cdot \sin t \\
+				 -\sin^2 t + \frac{1}{2} \\
+				 \cos 2t
+			 \end{bmatrix}
+\end{split}
+\end{equation}
+
+In frame AV1 we define
+
+\begin{empheq}[left={\empheqlbrace}]{align*}
+	x_p &= \begin{bmatrix}
+	1 & 0 & 0
+	\end{bmatrix}^\top, \\
+	y_p &= \begin{bmatrix}
+	0 & \frac{\sqrt{5}}{5} & \frac{2\sqrt{5}}{5}
+	\end{bmatrix}^\top, \\
+	z_p &= \begin{bmatrix}
+	0 & -\frac{2\sqrt{5}}{5} & \frac{\sqrt{5}}{5}
+	\end{bmatrix}^\top.
+\end{empheq}
+
+So,
+
+\begin{align}
+	R_p^1 = \begin{bmatrix}
+		x_p^1 & y_p^1 & z_p^1
+	\end{bmatrix} = \begin{bmatrix}
+		1 & 0 & 0 \\
+		0 & \frac{\sqrt{5}}{5} & -\frac{2\sqrt{5}}{5} \\
+		0 & -\frac{2\sqrt{5}}{5} & \frac{\sqrt{5}}{5}
+	\end{bmatrix}.
+\end{align}
+
+Therefore,
+\begin{equation}
+\begin{split}
+	o_2^p(t) &= R_p^1 \cdot o(t) \\
+					 &= \begin{bmatrix}
+						 1 & 0 & 0 \\
+						 0 & \frac{\sqrt{5}}{5} & -\frac{2\sqrt{5}}{5} \\
+						 0 & -\frac{2\sqrt{5}}{5} & \frac{\sqrt{5}}{5}
+					 \end{bmatrix} \cdot \begin{bmatrix}
+						 \cos t \cdot \sin t \\
+						 -\sin^2 t + \frac{1}{2} \\
+						 \cos 2t
+					 \end{bmatrix} \\
+					 &= \begin{bmatrix}
+					 	 \frac{1}{2}\sin 2t \\
+					 	 -\frac{\sqrt{5}}{2}\cos 2t \\
+					 	 0
+					 \end{bmatrix}.
+\end{split}
+\end{equation}
+
+\textbf{5.} Using the expression of $o^{p}_{2}(t)$, prove that the trajectory of AV2 relative to AV1 is an ellipse and compute the lengths of its semi-axes.
+
+In \textbf{question 4}, we reached that
+
+\begin{align*}
+	o_2^p(t) = \begin{bmatrix}
+		\frac{1}{2}\sin 2t \\
+		-\frac{\sqrt{5}}{2}\cos 2t \\
+		0
+	\end{bmatrix},
+\end{align*}
+
+Obviously, that is
+
+\begin{align}
+	\frac{{x_p}^2}{\frac{1}{4}} + \frac{{y_p}^2}{\frac{5}{4}} = 1,
+\end{align}
+
+and
+
+\begin{align}
+	a = \frac{1}{2}, b = \frac{\sqrt{5}}{2}
+\end{align}
+
+% subsubsection deliverable_4_mathematical_derivations (end)
+
+\subsubsection{Deliverable 5 - More properties of quaternions} % (fold)
+\label{ssub:deliverable_5_more_properties_of_quaternions}
+
+In the lecture notes, we have defined two linear maps $\Omega\_1$: $\mathbb{R}^4 \to \mathbb{R}^{4 \times 4}$, and $\Omega\_2$: $\mathbb{R}^4 \to \mathbb{R}^{4 \times 4}$, such that for any $q \in \mathbb{R}^4$, we have:
+
+\begin{align*}
+	\Omega_1(q) &= \begin{bmatrix}
+		q_4 & -q_3 & q_2 & q_1 \\
+		q_3 & q_4 & -q_1 & q_2 \\
+		-q_2 & q_1 & q_4 & q_3 \\
+		-q_1 & -q_2 & -q_3 & q_4
+	\end{bmatrix}, \\
+	\Omega_2(q) &= \begin{bmatrix}
+		q_4 & q_3 & -q_2 & q_1 \\
+		-q_3 & q_4 & q_1 & q_2 \\
+		q_2 & -q_1 & q_4 & q_3 \\
+		-q_1 & -q_2 & -q_3 & q_4
+	\end{bmatrix}.
+\end{align*}
+
+The product between any two unit quaternions can then be explicitly computed as:
+
+\begin{align*}
+q_a \otimes q_b = \Omega_1(q_a)q_b = \Omega_2(q_b)q_a.
+\end{align*}
+
+\textbf{1.} For any unit quaternion $q$, both $\Omega_1(q)$ and $\Omega_2(q)$ are orthogonal matrices, i.e.,
+
+\begin{align*}
+\Omega_1(q)^T\Omega_1(q) &= \Omega_1(q)\Omega_1(q)^T = I_4, \\
+\Omega_2(q)^T\Omega_2(q) &= \Omega_2(q)\Omega_2(q)^T = I_4.
+\end{align*}
+
+Intuitively, what is the reason that both \(\Omega_1(q)\) and \(\Omega_2(q)\) must be orthogonal?
+
+To make it easy, it can directly calculated. Only when $q$ is a unit quaternion, we have the result of
+
+\begin{align*}
+	\Omega_1(q)^\top \Omega_1(q) = {||q||}^2 I.
+\end{align*}
+
+And for $\Omega_2(q)$, the result would be the same.
+
+2. For any unit quaternion $q$, both $\Omega_1(q)$ and $\Omega_2(q)$ convert $q$ to be the unit quaternion that corresponds to the 3D identity rotation, i.e.,
+
+\begin{align*}
+\Omega_1(q)^Tq = \Omega_2(q)^Tq = [0, 0, 0, 1]^T.
+\end{align*}
+
+I cannot tell why, but it can alwo be calculated:
+
+\begin{align*}
+	\begin{bmatrix}
+		q_4 & -q_3 & q_2 & q_1 \\
+		q_3 & q_4 & -q_1 & q_2 \\
+		-q_2 & q_1 & q_4 & q_3 \\
+		-q_1 & -q_2 & -q_3 & q_4
+	\end{bmatrix} \begin{bmatrix}
+		q_1 \\
+		q_2 \\
+		q_3 \\
+		q_4
+	\end{bmatrix} = \begin{bmatrix}
+		0 \\
+		0 \\
+		0 \\
+		1
+	\end{bmatrix}
+\end{align*}
+
+3. For any two vectors $x, y \in \mathbb{R}^4$, show the two linear operators commute, i.e.,
+
+\begin{align*}
+\Omega_1(x)\Omega_2(y) &= \Omega_2(y)\Omega_1(x), \\
+\Omega_1(x)\Omega_2(y)^T &= \Omega_2(y)^T\Omega_1(x).
+\end{align*}
+
+Since,
+
+\begin{equation*}
+\begin{split}
+	\Omega_1(x)(\Omega_2(y)v) &= x \otimes (v \otimes y) \\
+	\Omega_2(y)(\Omega_1(x)v) &= (x \otimes v) \otimes y,
+\end{split}
+\end{equation*}
+
+for every $v \in \mathbb{R}^4$ it should be right.
+
+That is $\Omega_1(x)\Omega_2(y) = \Omega_2(y)\Omega_1(x)$. Similarly, for $\Omega_1(x)\Omega_2(y)^T = \Omega_2(y)^T\Omega_1(x)$, the result would be the same.
+
+% subsubsection deliverable_5_more_properties_of_quaternions (end)
+
+\subsubsection{[Optional] Deliverable 6 - Intrinsic vs Extrinsic rotations} % (fold)
+\label{ssub:_optional_deliverable_6_intrinsic_vs_extrinsic_rotations}
+
+In OUC class this is no ``optional''. Though I'm very interested in it, I have no time to finish another deliverable.
+
+% subsubsection _optional_deliverable_6_intrinsic_vs_extrinsic_rotations (end)
+
+% subsection let_s_do_some_math (end)

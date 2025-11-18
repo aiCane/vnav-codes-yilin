@@ -1,0 +1,82 @@
+\section{ROS Intro}
+
+\subsection{ROS file system structure}
+
+\subsubsection{General structure}
+
+Along all these files, the ROS packages are the most important and basic units. They contain nodes, libraries, configeration files and others. Just as figure~\ref{fig:ros-file-structure} shows, there are mainly four structures: \textbf{package manifest}, \textbf{messages}, \textbf{service}, \textbf{code} and others.
+
+According to the \textit{VNAV} website, a package we will develop would be like:\cite{MIT-VNAV}
+
+\begin{minted}[fontsize=\small]{text}
+.
++-- two_drones_pkg
+    |-- CMakeLists.txt
+    |-- README.md
+    |-- config
+    |   +-- default.rviz
+    |-- launch
+    |   +-- two_drones.launch
+    |-- mesh
+    |   +-- quadrotor.dae
+    |-- package.xml
+    +-- src
+        |-- frames_publisher_node.cpp
+        +-- plots_publisher_node.cpp
+\end{minted}
+
+\subsubsection{The workspace}
+
+In short, the workspace is a directory under \texttt{\$HOME/\$}, such as \texttt{~/catkin\_ws}. It serves as the foundational organizational unit for ROS development. It contains one or more ROS packages, each of which holds source code, configuration files, and other necessary resources. The workspace provides a unified environment in which these packages can be built together—typically via \texttt{catkin\_make}. This centralized structure is especially useful when managing multiple interdependent packages, as it streamlines compilation and ensures consistent build settings across the entire project.
+
+\subsection{ROS Master, nodes and topics}
+
+\subsubsection{ROS Master}
+
+Any ROS system must have one and only one master. A ROS Master transfer imformation about the topics to all nodes. And to start a master we could simply run \texttt{roscore} inside a new terminal, the result are pasted in code~\ref{lst:roscore}.
+
+\subsubsection{ROS Nodes}
+
+A ROS system could have several nodes. One thing to say, turtlesim is a very classic teaching example in all tutorial. It would open a blue window with a turtle in the middle, and we can control the turtle with \textit{wsad} on our keyboard. To create a turtlesim node, we run \texttt{rosrun turtlesim turtlesim\_node} in a new terminal, and the screen would be like figure~\ref{fig:turtlesim}.
+
+\subsubsection{ROS Topics}
+
+A ROS topic is a channel, and all messages are sent here. In the exercise after, there is a good example.
+
+\subsection{Anatomy of a ROS node}
+
+Unlike most ai practice, we use \textit{C++} code instead of \textit{Python}. Although Python has a better support in AI, C++ runs way more faster.
+
+In a simple C++ file, firstly, it should contains a ROS header such as:
+
+\begin{minted}[fontsize=\normalsize]{cpp}
+#include <ros/ros.h>
+\end{minted}
+
+Above all, a \texttt{ros::init} call initialize the node:
+
+\begin{minted}[fontsize=\normalsize]{cpp}
+ros::init(argc, argv, "example_node");
+\end{minted}
+
+It is important that the node's name must be unique. This initialization does not contact the master, instead, we use
+
+\begin{minted}[fontsize=\normalsize]{cpp}
+ros::NodeHandle n;
+\end{minted}
+
+This calls a \texttt{ros::start()}, and when the last \texttt{ros::NodeHandle} is destroyed, it calls \texttt{ros::shutdown()}. Usually we want to run our node at a given frequency, to set the node frequency we use
+
+\begin{minted}[fontsize=\normalsize]{cpp}
+ros::Rate loop_rate(50);
+\end{minted}
+
+which is setting the desired rate at 50 Hz.
+
+\subsection{Launch files}
+
+The launch files for a package are typically found within its \texttt{launch} directory and use the \texttt{.launch} file extension. If a package includes such a file, you can start it using the \texttt{roslaunch} command.
+
+\begin{minted}[fontsize=\normalsize]{cpp}
+roslaunch <package_name> <launch_file>
+\end{minted}

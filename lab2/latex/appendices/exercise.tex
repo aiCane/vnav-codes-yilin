@@ -1,0 +1,487 @@
+\section{Exercise}
+
+\subsection{Setup workspace}
+
+\subsubsection{Create the catkin workspace}
+
+I have done this before, so it may be a little different to the tutorial.
+
+\begin{minted}{console}
+ros@ros:~$ mkdir -p ~/vnav_ws/src/
+ros@ros:~$ cd ~/vnav_ws/
+ros@ros:~/vnav_ws$ catkin init
+Catkin workspace `/home/ros/vnav_ws` is already initialized. No action taken.
+------------------------------------------------------
+Profile:                     default
+Extending:          [cached] /opt/ros/noetic
+Workspace:                   /home/ros/vnav_ws
+------------------------------------------------------
+Build Space:        [exists] /home/ros/vnav_ws/build
+Devel Space:        [exists] /home/ros/vnav_ws/devel
+Install Space:      [unused] /home/ros/vnav_ws/install
+Log Space:          [exists] /home/ros/vnav_ws/logs
+Source Space:       [exists] /home/ros/vnav_ws/src
+DESTDIR:            [unused] None
+------------------------------------------------------
+Devel Space Layout:          linked
+Install Space Layout:        None
+------------------------------------------------------
+Additional CMake Args:       None
+Additional Make Args:        None
+Additional catkin Make Args: None
+Internal Make Job Server:    True
+Cache Job Environments:      False
+------------------------------------------------------
+Buildlisted Packages:        None
+Skiplisted Packages:         None
+------------------------------------------------------
+Workspace configuration appears valid.
+------------------------------------------------------
+\end{minted}
+
+\subsubsection{Getting the Lab code and Building the code}
+
+Then we copy the code from \texttt{lab2} to the \texttt{src/} directory, and we build and source this new shell.
+
+\begin{minted}{console}
+ros@ros:~/vnav_ws$ cp -a ~/labs/lab2/two_drones_pkg/ ~/vnav_ws/src/
+ros@ros:~/vnav_ws$ catkin build
+------------------------------------------------------
+Profile:                     default
+Extending:          [cached] /opt/ros/noetic
+Workspace:                   /home/ros/vnav_ws
+------------------------------------------------------
+Build Space:        [exists] /home/ros/vnav_ws/build
+Devel Space:        [exists] /home/ros/vnav_ws/devel
+Install Space:      [unused] /home/ros/vnav_ws/install
+Log Space:          [exists] /home/ros/vnav_ws/logs
+Source Space:       [exists] /home/ros/vnav_ws/src
+DESTDIR:            [unused] None
+------------------------------------------------------
+Devel Space Layout:          linked
+Install Space Layout:        None
+------------------------------------------------------
+Additional CMake Args:       None
+Additional Make Args:        None
+Additional catkin Make Args: None
+Internal Make Job Server:    True
+Cache Job Environments:      False
+------------------------------------------------------
+Buildlisted Packages:        None
+Skiplisted Packages:         None
+------------------------------------------------------
+Workspace configuration appears valid.
+------------------------------------------------------
+[build] Found 1 packages in 0.0 seconds.
+[build] Package table is up to date.
+Starting  >>> two_drones_pkg
+Finished  <<< two_drones_pkg                [ 0.1 seconds ]
+[build] Summary: All 1 packages succeeded!
+[build]   Ignored:   None.
+[build]   Warnings:  None.
+[build]   Abandoned: None.
+[build]   Failed:    None.
+[build] Runtime: 0.1 seconds total.
+ros@ros:~/vnav_ws$ echo "source $HOME/vnav_ws/devel/setup.bash" >> ~/.bashrc
+ros@ros:~/vnav_ws$ source ~/.bashrc
+\end{minted}
+
+\subsubsection{A two-drone scenario - The static scenario and rViz}
+
+With the command
+
+\begin{minted}{bash}
+roslaunch two_drones_pkg two_drones.launch static:=True
+\end{minted}
+
+we are able to add \texttt{/tf} in the Display channel as figure, and then \textit{CTRL + s} to save the config.
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/two-drones}
+	\caption{The RViz window after added \texttt{/tf} option.}
+	\label{fig:two-drones}
+\end{figure}
+
+\subsection{Problem formulation}
+\label{sub:a_problem_formulation}
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/two-drones-refs}
+	\caption{AV1 [blue] and AV2 [red] are following different trajectories: a circle and an arc of parabola, respectively.\cite{MIT-VNAV}}
+	\label{fig:two-drones-refs}
+\end{figure}
+
+\subsubsection{Positions}
+
+In the world frame, AV1 and AV2’s origins are given by:
+
+\begin{align}
+o^{w}_{1}\;&=\;[\cos(t),\sin(t),0]^{T}, \text{and} \\
+o^{w}_{2}\;&=\;[\sin(t),0,\cos(2t)]^{T},
+\end{align}
+
+where \textit{t} denotes time.\cite{MIT-VNAV}
+
+\subsubsection{Orientations}
+
+\begin{itemize}
+	\item AV1’s reference frame is such that $y_1$ stays tangent to AV1’s trajectory for all $t$ and $z_1$ is parallel to $z_w$ for all $t$ (i.e., equivalently, roll = pitch = 0, yaw = $t$)
+	\item AV2’s reference frame moves with pure translation and we can assume that its axes are parallel to the world axes for all times $t$\cite{MIT-VNAV}
+\end{itemize}
+
+\subsection{Basic ROS commands}
+
+\begin{figure*}[!t]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/rosgraph}
+	\caption{The nodes are generated by using \texttt{rqt\_graph}}
+	\label{fig:rosgraph}
+	% IEEE uses as a separator
+	\hrulefill
+	% The spacer can be tweaked to stop underfull vboxes.
+	\vspace*{4pt}
+\end{figure*}
+
+\subsubsection{Deliverable 1 - Nodes, topics, launch files}
+\label{ssub:a_deliverable_1_nodes_topics_launch_files}
+
+\begin{minted}{text}
+<launch>
+  <arg name="static" default="false"/>
+
+  <!-- Transform publishers !-->
+  <group if="$(arg static)">
+    <node pkg="tf2_ros" type="static_transform_publisher" name="av1broadcaster" args="1 0 0 0 0 0 1 world av1"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="av2broadcaster" args="0 0 1 0 0 0 1 world av2"/>
+  </group>
+
+  <node name="frames_publisher_node" pkg="two_drones_pkg" type="frames_publisher_node" unless="$(arg static)"/>
+
+  <!-- Marker publisher -->
+  <node name="plots_publisher_node" pkg="two_drones_pkg" type="plots_publisher_node"/>
+
+  <!-- Visualizer -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find two_drones_pkg)/config/default.rviz"/>
+</launch>
+\end{minted}
+
+\subsubsection{Deliverable 2 - Publishing transforms}
+\label{ssub:a_deliverable_2_publishing_transforms}
+
+\begin{minted}{cpp}
+#include <ros/ros.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+
+#include <iostream>
+#include <cmath>
+
+class FramesPublisherNode {
+ private:
+  ros::NodeHandle nh;
+  ros::Time startup_time;
+
+  ros::Timer heartbeat;
+  tf2_ros::TransformBroadcaster br;
+
+ public:
+  FramesPublisherNode() {
+    // NOTE: This method is run once, when the node is launched.
+    startup_time = ros::Time::now();
+    heartbeat =
+        nh.createTimer(ros::Duration(0.02), &FramesPublisherNode::onPublish, this);
+    heartbeat.start();
+  }
+
+  void onPublish(const ros::TimerEvent&) {
+    // NOTE: This method is called at 50Hz, due to the timer created on line 16.
+
+    // 1. Compute time elapsed in seconds since the node has been started
+    //    i.e. the time elapsed since startup_time (defined on line 8)
+    //   HINTS:
+    //   - check out the ros::Time API at
+    //     http://wiki.ros.org/roscpp/Overview/Time#Time_and_Duration
+    //   - use the - (subtraction) operator between ros::Time::now() and startup_time
+    //   - convert the resulting Duration to seconds, store result into a double
+
+    double time = (ros::Time::now() - startup_time).toSec();
+
+    // Here we declare two geometry_msgs::TransformStamped objects, which need to be
+    // populated
+    geometry_msgs::TransformStamped AV1World;
+    geometry_msgs::TransformStamped AV2World;
+    // NOTE: fields in a ros message default to zero, so we set an identity transform by
+    //       setting just the w component of the rotation
+    AV1World.transform.rotation.w = 1.0;
+    AV2World.transform.rotation.w = 1.0;
+
+    // 2. Populate the two transforms for the AVs, using the variable "time"
+    //    computed above. Specifically:
+    //     - AV1World should have origin in [cos(time), sin(time), 0.0] and
+    //       rotation such that:
+    //        i) its y axis stays tangent to the trajectory and
+    //       ii) the z vector stays parallel to that of the world frame
+    //     - AV1World should have frame_id "world" and child_frame_id "av1"
+    //
+    //     - AV2World shoud have origin in [sin(time), 0.0, cos(2*time)], the
+    //       rotation is irrelevant to our purpose.
+    //     - AV2World should have frame_id "world" and child_frame_id "av2"
+    //    NOTE: AV1World's orientation is crucial for the rest fo the assignment,
+    //          make sure you get it right
+    //
+    //    HINTS:
+    //    1. check out the ROS tf2 Tutorials: http://wiki.ros.org/tf2/Tutorials,
+    //      https://wiki.ros.org/tf2/Tutorials/Adding%20a%20frame%20%28C%2B%2B%29#The_Code
+    //    2. consider the setRPY method on a tf2::Quaternion for AV1
+    //    3. the frame names are crucial for the rest of the assignment,
+    //       make sure they are as specified, "av1", "av2" and "world"
+
+    // AV1World
+    AV1World.header.stamp = ros::Time::now();
+    AV1World.transform.translation.x = cos(time);
+    AV1World.transform.translation.y = sin(time);
+    AV1World.transform.translation.z = 0.0;
+
+    tf2::Quaternion q;
+    q.setRPY(0, 0, time+M_PI_2);
+    AV1World.transform.rotation = tf2::toMsg(q);
+
+    AV1World.header.frame_id = "world";
+    AV1World.child_frame_id = "av1";
+
+    // AV2World
+    AV2World.header.stamp = ros::Time::now();
+    AV2World.transform.translation.x = sin(time);
+    AV2World.transform.translation.y = 0.0;
+    AV2World.transform.translation.z = cos(2*time);
+
+    AV2World.header.frame_id = "world";
+    AV2World.child_frame_id = "av2";
+
+    // 3. Publish the transforms using a tf2_ros::TransformBroadcaster
+    //    HINTS:
+    //         1. you need to define a tf2_ros::TransformBroadcaster as a member of the
+    //            node class (line 11) and use its sendTrasform method below
+
+    br.sendTransform(AV1World);
+    br.sendTransform(AV2World);
+  }
+};
+
+int main(int argc, char** argv) {
+  ros::init(argc, argv, "frames_publisher_node");
+  FramesPublisherNode node;
+  ros::spin();
+  return 0;
+}
+\end{minted}
+
+\subsubsection{Deliverable 3 - Looking up a transform}
+\label{ssub:a_deliverable_3_looking_up_a_transform}
+
+\begin{minted}{cpp}
+#include <geometry_msgs/Point.h>
+#include <ros/ros.h>
+#include <tf2_ros/transform_listener.h>
+#include <visualization_msgs/MarkerArray.h>
+
+#include <iostream>
+#include <list>
+
+class PlotsPublisherNode {
+  ros::Time startup_time;
+  ros::Timer heartbeat;
+  ros::NodeHandle nh;
+  ros::Publisher markers_pub;
+  tf2_ros::TransformListener tf_listener;
+  tf2_ros::Buffer tf_buffer;
+  int num_trails;
+
+  class TrajTrail {
+    PlotsPublisherNode* parent;
+    static int id;
+    std::list<geometry_msgs::Point> poses;
+    std::string ref_frame, dest_frame;
+    size_t buffer_size;
+
+    std::string ns;
+    float r, g, b, a;
+
+    visualization_msgs::Marker marker_out;
+
+    void update() {
+      // NOTE: you need to populate this transform
+      geometry_msgs::TransformStamped transform;
+      try {
+        // ~~~~~~~~~~~~~~~~~~  BEGIN OF EDIT SECTION  ~~~~~~~~~~~~~~~~~~~~~
+
+        /* The transform object needs to be populated with the most recent
+         * transform from ref_frame to dest_frame as provided by tf.
+
+         * Relevant variables in this scope:
+         *   - ref_frame, the frame of reference relative to which the trajectory
+         *                needs to be plotted (given)
+         *   - dest_frame, the frame of reference of the object whose trajectory
+         *                 needs to be plotted (given)
+         *   - parent->tf_buffer, a tf2_ros::Buffer object (given)
+         *   - transform, the geometry_msgs::TransformStamped object that needs to be populated
+         *
+         * HINT: use "lookupTransform", see
+         * https://wiki.ros.org/tf2/Tutorials/Writing%20a%20tf2%20listener%20%28C%2B%2B%29#TheCode
+         */
+
+        transform = parent->tf_buffer.lookupTransform(
+          ref_frame,
+          dest_frame,
+          ros::Time(0),
+          ros::Duration(0.1)
+        );
+
+        // ~~~~~~~~~~~~~~~~~~~~  END OF EDIT SECTION  ~~~~~~~~~~~~~~~~~~~~~
+        while (poses.size() >= buffer_size) {
+          poses.pop_front();
+        }
+
+        geometry_msgs::Point tmp;
+        tmp.x = transform.transform.translation.x;
+        tmp.y = transform.transform.translation.y;
+        tmp.z = transform.transform.translation.z;
+        poses.push_back(tmp);
+      } catch (const tf2::TransformException& ex) {
+        ROS_ERROR_STREAM("transform lookup failed: " << ex.what());
+      }
+    }
+
+   public:
+    TrajTrail() : parent(nullptr){};
+
+    TrajTrail(PlotsPublisherNode* parent_,
+              const std::string& ref_frame_,
+              const std::string& dest_frame_,
+              int buffer_size_ = 160)
+        : parent(parent_),
+          ref_frame(ref_frame_),
+          dest_frame(dest_frame_),
+          buffer_size(buffer_size_) {
+      if (buffer_size <= 0) {
+        ROS_ERROR_STREAM("invalid buffer size! defaulting to 10");
+        buffer_size = 10;
+      }
+
+      marker_out.header.frame_id = ref_frame;
+      marker_out.ns = "trails";
+      marker_out.id = parent->num_trails++;
+      marker_out.type = visualization_msgs::Marker::LINE_STRIP;
+      marker_out.action = visualization_msgs::Marker::ADD;
+      marker_out.color.a = 0.8;
+      marker_out.scale.x = 0.02;
+      marker_out.lifetime = ros::Duration(1.0);
+    }
+
+    void setColor(float r_, float g_, float b_) {
+      marker_out.color.r = r_;
+      marker_out.color.g = g_;
+      marker_out.color.b = b_;
+    }
+
+    void setNamespace(const std::string& ns_) { marker_out.ns = ns_; }
+
+    void setDashed() { marker_out.type = visualization_msgs::Marker::LINE_LIST; }
+
+    visualization_msgs::Marker getMarker() {
+      update();
+      marker_out.header.stamp = ros::Time::now();
+      marker_out.points.clear();
+      for (auto& p : poses) marker_out.points.push_back(p);
+
+      if (marker_out.type == visualization_msgs::Marker::LINE_LIST && poses.size() % 2)
+        marker_out.points.resize(poses.size() - 1);
+
+      return marker_out;
+    }
+  };
+
+  TrajTrail av1trail;
+  TrajTrail av2trail;
+  TrajTrail av2trail_rel;
+
+ public:
+  PlotsPublisherNode() : tf_listener(tf_buffer), num_trails(0) {
+    startup_time = ros::Time::now();
+    markers_pub = nh.advertise<visualization_msgs::MarkerArray>("visuals", 0);
+    heartbeat =
+        nh.createTimer(ros::Duration(0.02), &PlotsPublisherNode::onPublish, this);
+    heartbeat.start();
+    av1trail = TrajTrail(this, "world", "av1", 300);
+    av1trail.setColor(0.25, 0.52, 1.0);
+    av1trail.setNamespace("Trail av1-world");
+    av2trail = TrajTrail(this, "world", "av2", 300);
+    av2trail.setColor(0.8, 0.4, 0.26);
+    av2trail.setNamespace("Trail av2-world");
+    av2trail_rel = TrajTrail(this, "av1", "av2", 160);
+    av2trail_rel.setDashed();
+    av2trail_rel.setColor(0.8, 0.4, 0.26);
+    av2trail_rel.setNamespace("Trail av2-av1");
+
+    ROS_INFO_STREAM("Waiting for av1 and av2 transforms to be broadcast...");
+    while (ros::ok()) {
+      const bool av1_present = tf_buffer.canTransform("av1", "world", ros::Time(0));
+      const bool av2_present = tf_buffer.canTransform("av2", "world", ros::Time(0));
+      if (av1_present && av2_present) {
+        ROS_INFO_STREAM("Necessary frames are present, starting!");
+        break;
+      }
+    }
+  }
+
+  void onPublish(const ros::TimerEvent&) {
+    visualization_msgs::MarkerArray visuals;
+    visuals.markers.resize(2);
+    visualization_msgs::Marker& av1(visuals.markers[0]);
+    visualization_msgs::Marker& av2(visuals.markers[1]);
+    av1.header.frame_id = "av1";
+    av1.ns = "AVs";
+    av1.id = 0;
+    av1.header.stamp = ros::Time();
+    av1.type = visualization_msgs::Marker::MESH_RESOURCE;
+    av1.mesh_resource = "package://two_drones_pkg/mesh/quadrotor.dae";
+    av1.action = visualization_msgs::Marker::ADD;
+    av1.pose.orientation.w = 1.0;
+    av1.scale.x = av1.scale.y = av1.scale.z = av1.color.a = 1.0;
+    av1.color.r = 0.25;
+    av1.color.g = 0.52;
+    av1.color.b = 1.0;
+    av1.lifetime = ros::Duration(1.0);
+    av2 = av1;
+    av2.header.frame_id = "av2";
+    av2.ns = "AVs";
+    av2.id = 1;
+    av2.color.r = 0.8;
+    av2.color.g = 0.4;
+    av2.color.b = 0.26;
+
+    // Trails
+    visuals.markers.push_back(av1trail.getMarker());
+    visuals.markers.push_back(av2trail.getMarker());
+    visuals.markers.push_back(av2trail_rel.getMarker());
+    markers_pub.publish(visuals);
+  }
+};
+
+int main(int argc, char** argv) {
+  ros::init(argc, argv, "plots_publisher_node");
+  PlotsPublisherNode node;
+  ros::spin();
+  return 0;
+}
+\end{minted}
+
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/two-drones-circle}
+	\caption{The path of both avs can be seen after added codes above.}
+	\label{fig:two-drones-circle}
+\end{figure}

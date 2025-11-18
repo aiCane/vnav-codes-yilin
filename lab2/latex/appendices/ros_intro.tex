@@ -1,0 +1,76 @@
+\section{ROS Intro}
+
+\begin{figure}[tb]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/ROS-file-structure}
+	\caption{A tree map of ROS files and folder on the disk}
+	\label{fig:ros-file-structure}
+\end{figure}
+
+\begin{figure}[tb]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/turtlesim}
+	\caption{A new turtlesim node shows on the screen.\cite{MIT-VNAV}}
+	\label{fig:turtlesim}
+\end{figure}
+
+\begin{listing}
+\begin{minted}{console}
+ros@ros:~$ roscore
+... logging to /home/ros/.ros/log/363e3778-c11e-11f0-acb5-39e7c8db108d/roslaunch-ros-9803.log
+Checking log directory for disk usage. This may take a while.
+Press Ctrl-C to interrupt
+Done checking log file disk usage. Usage is <1GB.
+
+started roslaunch server http://ros:44839/
+ros_comm version 1.17.4
+
+
+SUMMARY
+========
+
+PARAMETERS
+ * /rosdistro: noetic
+ * /rosversion: 1.17.4
+
+NODES
+
+auto-starting new master
+process[master]: started with pid [9811]
+ROS_MASTER_URI=http://ros:11311/
+
+setting /run_id to 363e3778-c11e-11f0-acb5-39e7c8db108d
+process[rosout-1]: started with pid [9884]
+started core service [/rosout]
+\end{minted}
+\label{lst:roscore}
+\end{listing}
+
+\subsection{Quick overview of tf tools}
+
+\begin{figure}[tb]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/turtle-tf-demo}
+	\caption{The window of running \texttt{turtle\_tf\_demo.launch}}
+	\label{fig:turtle-tf-demo}
+\end{figure}
+
+\subsubsection{Using \texttt{rqt\_tf\_tree}}
+
+\begin{figure}[tb]
+	\centering
+	\includegraphics[width=0.8\linewidth]{figures/rqt-tf-tree}
+	\caption{The window of running \texttt{rqt\_tf\_tree}}
+	\label{fig:rqt-tf-tree}
+\end{figure}
+
+\subsubsection{Using \texttt{tf\_echo}}
+
+\begin{minted}{console}
+ros@ros:~$ rosrun tf tf_echo turtle1 turtle2
+At time 1763188806.764
+- Translation: [0.000, 0.000, 0.000]
+- Rotation: in Quaternion [0.000, 0.000, 0.707, 0.707]
+            in RPY (radian) [0.000, -0.000, 1.571]
+            in RPY (degree) [0.000, -0.000, 90.000]
+\end{minted}

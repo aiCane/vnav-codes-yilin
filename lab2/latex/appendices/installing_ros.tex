@@ -1,0 +1,52 @@
+\section{Installing ROS}
+\label{sec:a_installing_ros}
+
+These are the actual bash code I used:
+
+Set up keys:
+
+\begin{minted}{bash}
+gpg --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+gpg --export C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654 | sudo tee /usr/share/keyrings/ros.gpg > /dev/null
+\end{minted}
+
+Setup sources.list:
+
+\begin{minted}{bash}
+sudo sh -c 'echo "deb [signed-by=/usr/share/keyrings/ros.gpg] https://mirrors.ustc.edu.cn/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+\end{minted}
+
+Then we do the Desktop-Full Install:
+
+\begin{minted}{bash}
+sudo apt update
+sudo apt install ros-noetic-desktop-full
+\end{minted}
+
+And we should setup the environment. By using \texttt{.bashrc} it will be done automaticly.
+
+\begin{minted}{bash}
+echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
+source ~/.bashrc
+\end{minted}
+
+For \texttt{rosdep} installation, we use:
+
+\begin{minted}{bash}
+sudo mkdir -p /etc/ros/rosdep/sources.list.d/
+sudo curl -o /etc/ros/rosdep/sources.list.d/20-default.list https://mirrors.ustc.edu.cn/rosdistro/rosdep/sources.list.d/20-default.list
+sed -i 's#raw.githubusercontent.com/ros/rosdistro/master#mirrors.ustc.edu.cn/rosdistro#g' /etc/ros/rosdep/sources.list.d/20-default.list
+
+export ROSDISTRO_INDEX_URL=https://mirrors.ustc.edu.cn/rosdistro/index-v4.yaml
+rosdep update
+
+echo 'export ROSDISTRO_INDEX_URL=https://mirrors.ustc.edu.cn/rosdistro/index-v4.yaml' >> ~/.bashrc
+
+sudo apt-get update
+sudo apt install python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential
+
+sudo apt install python3-rosdep
+
+sudo rosdep init
+rosdep update
+\end{minted}

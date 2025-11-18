@@ -1,0 +1,48 @@
+\documentclass{IEEEtran}
+
+\usepackage{minted}
+\usepackage[svgnames]{xcolor}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{empheq}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{cite}
+
+\setminted{
+	breaklines,
+	breakanywhere,
+	fontsize=\footnotesize,
+}
+
+\title{\LARGE \bf
+	Lab 2 Report: ROS Installation and \texttt{/tf} and Homogeneous Transformations Experiment
+}% <-this % stops a space
+\author{Yilin Zhang~23020036094$^{1}$. Lab group: 31.
+	\thanks{$^{1}$Yilin zhang is with Faculty of Robotics and Computer Science,
+	        Ocean University of China and Heriot-Watt University, China Mainland
+  	      {\tt\small zyl8820@stu.ouc.edu.cn}
+  }
+}% <-this % stops a space
+
+\begin{document}
+
+\maketitle
+
+\input{sections/installing_ros}
+\input{sections/ros_intro}
+\input{sections/exercise}
+\input{sections/some_words}
+
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv, refs}
+
+\appendices
+
+\input{appendices/installing_ros}
+\input{appendices/ros_intro}
+\input{appendices/exercise}
+
+\end{document}
