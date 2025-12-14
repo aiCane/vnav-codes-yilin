@@ -1,0 +1,25 @@
+\section{Individual}
+
+\subsection{Deliverable - Single-segment trajectory optimization}
+
+Consider the following minimum velocity ($r = 1$) single-segment trajectory optimization problem:
+
+\begin{align}
+\min_{P(t)} \int_0^1(P^{(1)}(t))^2 dt, \label{eq:obj} \\
+s.t. \quad P(0) = 0, \label{eq:bc0} \\
+P(1) = 1,
+\end{align}
+
+with $P(t) \in \mathbb{R}[t]$, i.e., $P(t)$ is a polynomial function in $t$ with real coefficients:
+
+\begin{align}
+P(t) = p_N t^N + p_{N-1} t^{N-1} + \dots + p_1 t + p_0.
+\end{align}
+
+Note that because of constraint (\ref{eq:bc0}), we have $P(0) = p_0 = 0$, and we can parametrize $P(t)$ without a scalar part $P_0$.
+
+\textit{1} Suppose we restrict $P(t) = p_1 t$ to be a polynomial of degree 1, what is the optimal solution of problem (\ref{eq:obj})? What is the value of the cost function at the optimal solution?
+
+\textit{2} Suppose now we allow $P(t)$ to have degree 2, i.e., $P(t) = p_2 t^2 + p_1 t$.
+
+\textit{(a)} 
