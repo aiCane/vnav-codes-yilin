@@ -1,0 +1,8 @@
+VNAV:
+    type: web
+    title: MIT16.485 - Visual Navigation for Autonomous Vehicles
+    author: Massachusetts Institute of Technology
+    date: 2023
+    url:
+        value: https://vnav.mit.edu/labs_2023/lab4/exercises.html
+        date: 2025-12-09
