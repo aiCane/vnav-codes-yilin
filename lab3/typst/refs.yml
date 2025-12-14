@@ -1,0 +1,60 @@
+VNAV:
+    type: web
+    title: MIT16.485 - Visual Navigation for Autonomous Vehicles
+    author: Massachusetts Institute of Technology
+    date: 2023
+    url:
+        value: https://vnav.mit.edu/labs_2023/lab3/exercises.html
+        date: 2025-11-30
+
+Converting-Datatypes:
+    type: web
+    title: Converting Datatypes
+    author: Open Robotics
+    url:
+        value: https://wiki.ros.org/tf2/Tutorials/Quaternions
+        date: 2025-11-30
+
+Quaternion-Basics:
+    type: web
+    title: Quaternion Basics
+    author: Open Robotics
+    url:
+        value: https://wiki.ros.org/tf2/Tutorials/Migration/DataConversions
+        date: 2025-11-30
+
+Lee2010Geometric:
+    type: article
+    title: Geometric tracking control of a quadrotor UAV on SE(3)
+    author:
+        - Lee, Taeyoung
+        - Leok, Melvin
+        - McClamroch, N. Harris
+    date: 2010
+    serial-number:
+        doi: "10.1109/CDC.2010.5717652"
+    page-range: 5420-5425
+    parent:
+        type: Periodical
+        title: 49th IEEE Conference on Decision and Control (CDC)
+        publisher: IEEE
+
+hayagriva:
+    type: web
+    title: The Hayagriva YAML File Format
+    author: typst
+    date: 2021-01-18
+    url:
+        value: https://github.com/typst/hayagriva/blob/main/docs/file-format.md
+        date: 2025-11-30
+
+rank:
+    type: video
+    title: 彻底搞懂矩阵的秩！
+    author:
+        given-name: 烈
+        name: 李
+        alias: 考研数学李烈老师
+    url:
+        value: https://www.bilibili.com/video/BV1gp421R7VN
+        date: 2025-12-04
