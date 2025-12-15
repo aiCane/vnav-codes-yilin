@@ -1,4 +1,5 @@
 .DS_Store
 aux/
+_minted-main/
 
 lab1/RandomVector/random_vector
