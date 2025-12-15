@@ -5,21 +5,64 @@
 Consider the following minimum velocity ($r = 1$) single-segment trajectory optimization problem:
 
 \begin{align}
-\min_{P(t)} \int_0^1(P^{(1)}(t))^2 dt, \label{eq:obj} \\
-s.t. \quad P(0) = 0, \label{eq:bc0} \\
-P(1) = 1,
+  \min_{P(t)} \int_0^1(P^{(1)}(t))^2 dt, \label{eq:obj} \\
+             \text{s.t.} \quad P(0) = 0, \label{eq:bc0} \\
+                                 P(1) = 1, \label{eq:bc1}
 \end{align}
 
 with $P(t) \in \mathbb{R}[t]$, i.e., $P(t)$ is a polynomial function in $t$ with real coefficients:
 
-\begin{align}
-P(t) = p_N t^N + p_{N-1} t^{N-1} + \dots + p_1 t + p_0.
-\end{align}
+\begin{equation}
+	P(t) = p_N t^N + p_{N-1} t^{N-1} + \dots + p_1 t + p_0.
+\end{equation}
 
-Note that because of constraint (\ref{eq:bc0}), we have $P(0) = p_0 = 0$, and we can parametrize $P(t)$ without a scalar part $P_0$.
+Note that because of constraint (\ref{eq:bc0}), we have $P(0) = p_0 = 0$, and we can parametrize $P(t)$ without a scalar part $p_0$.
 
-\textit{1} Suppose we restrict $P(t) = p_1 t$ to be a polynomial of degree 1, what is the optimal solution of problem (\ref{eq:obj})? What is the value of the cost function at the optimal solution?
+\textit{1.} Suppose we restrict $P(t) = p_1 t$ to be a polynomial of degree 1, what is the optimal solution of problem (\ref{eq:obj})? What is the value of the cost function at the optimal solution?
 
-\textit{2} Suppose now we allow $P(t)$ to have degree 2, i.e., $P(t) = p_2 t^2 + p_1 t$.
+\textit{2.} Suppose now we allow $P(t)$ to have degree 2, i.e., $P(t) = p_2 t^2 + p_1 t$.
 
-\textit{(a)} 
+\textit{(a)} Write $\int_0^1(P^{(1)}(t))^2 dt$, the cost function of problem (\ref{eq:obj}), as $\mathbf{p}^\top \mathbf{Q} \mathbf{p}$, where $\mathbf{p} = [p_1, p_2]^\top$ and $\mathbf{Q} \in \mathbb{S}^2$ is a symmetric $2 \times 2$ matrix.
+
+\textit{(b)} Write $P(1) = 1$, constraint (\ref{eq:bc1}), as $\mathbf{A} \mathbf{p} = \mathbf{b}$, where $\mathbf{A} \in \mathbb{R}^{1 \times 2}$ and $\mathbf{b} \in \mathbb{R}$.
+
+\textit{(c)} Solve the Quadratic Program (QP):
+
+\begin{equation}
+  \min_{\mathbf{p}} \mathbf{p}^\top \mathbf{Q} \mathbf{p} \quad \text{s.t.} \quad \mathbf{A} \mathbf{p} = \mathbf{b}. \label{eq:qp}
+\end{equation}
+
+You can solve it by hand, or you can solve it using numerical QP solvers (e.g., you can easily use the \href{https://www.mathworks.com/help/optim/ug/quadprog.html}{\texttt{quadprog}} function in Matlab). What is the optimal solution you get for $P(t)$, and what is the value of the cost function at the optimal solution? Are you able to get a lower cost by allowing $P(t)$ to have degree 2?
+
+\textit{3.} Now suppose we allow $P(t) = p_3 t^3 + p_2 t^2 + p_1 t$:
+
+\textit{(a)} Let $\mathbf{p} = [p_1, p_2, p_3]^\top$, write down $\mathbf{Q} \in \mathbb{S}^3$, $\mathbf{A} \in \mathbb{R}^{1 \times 3}$, and $b \in \mathbb{R}$ for the QP (\ref{eq:qp}).
+
+\textit{(b)} Solve the QP. What optimal solution do you get? Does this example agree with the result we learned from the Euler-Lagrange equation in class?
+
+\textit{4.} Now suppose we are interested in adding one more constraint to problem (\ref{eq:obj}):
+
+\begin{equation}
+\begin{aligned}
+  &\min_{P(t)} \int_0^1(P^{(1)}(t))^2 dt, \\
+  \text{s.t.} \quad &P(0) = 0, \quad P(1) = 1, \quad P^{(1)}(1) = -2. 
+\end{aligned}
+\label{eq:ooobj}
+\end{equation}
+
+Using the QP method above, find the optimal solution and optimal cost of problem (\ref{eq:ooobj}) in the case of:
+
+\textit{(a)} $P(t) = p_2 t^2 + p_1 t$, and
+
+\textit{(b)} $P(t) = p_3 t^3 + p_2 t^2 + p_1 t$.
+
+\subsection{Deliverable - Multi-segment trajectory optimization}
+
+\textit{1.} Assume our goal is to compute the minimum snap trajectory ($r = 4$) over $k$ segments. How many and which type of constraints (at the intermediate points and at the start and end of the trajectory) do we need in order to solve this problem? Specify the number of waypoint constraints, free derivative constraints and fixed derivative constraints.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=\linewidth]{figures/trajOpt}
+\end{figure}
+
+\textit{2.} Can you extend the previous question to the case in which the cost functional minimizes the $r$-th derivative and we have $k$ segments?

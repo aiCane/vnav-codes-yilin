@@ -2,4 +2,205 @@
 
 \subsection{Deliverable - Single-segment trajectory optimization}
 
+\textit{1.} Sol.
+
+Since $P(t) = p_1t$, and $P(1) = 1$, we got
+
+\begin{align*}
+  &P(1) = 1 = p_1 \cdot 1  \\ 
+  \Rightarrow \quad &p_1 = 1 \\
+  \Rightarrow \quad &P(t) = t.
+\end{align*}
+
+Since we have only one solution, this is the optimal solution. Here, $P^{(1)}(t) = t' = 1$, put it to aim function, we have
+
+\begin{equation*}
+  \int_0^1(P^{(1)}(t))^2dt = \int_0^11^2dt = 1.
+\end{equation*}
+
+That is, the optimal solution is $P(t) = t$, and the value of the cost function is $1$.
+
+\textit{2.} Sol.
+
+\textit{(a)} We have
+
+\begin{align*}
+  \int_0^1(p^{(1)}(t))^2dt &= \int_0^1((p_2t^2 + p_1t)')^2dt \\
+  &= \int_0^1(2p_2t + p_1)^2dt \\
+  &= \int_0^1(4{p_2}^2t^2 + 4p_1p_2t + {p_1}^2)dt \\
+  &= [\frac{4}{3}{p_2}^2t^3 + 2p_1p_2t^2 + {p_1}^2t]_0^1 \\
+  \text{so, }\int_0^1(p^{(1)}(t))^2dt &= \frac{4}{3}{p_2}^2 + 2p_1p_2 + {p_1}^2.
+\end{align*}
+
+Since $\mathbf{p} = [p_1, p_2]^\top$, we got the symmetric matrix $\mathbf{Q}$:
+
+\begin{align*}
+  \mathbf{Q} &= \begin{bmatrix}
+    1 & 1 \\
+    1 & \frac{4}{3}
+  \end{bmatrix}, \\
+  s.t. \quad \int_0^1(p^{(1)}(t))^2dt &= \mathbf{p}^\top \mathbf{Q} \mathbf{p}.
+\end{align*}
+
+\textit{(b)} Since $P(t) = p_2 t^2 + p_1 t = 1$, we have $p_2 + p_1 = 1$. Therefore, it can be written as $\mathbf{A} \mathbf{p} = \mathbf{b}$, where:
+
+\begin{equation*}
+  \mathbf{A} = [1, 1], \quad \mathbf{b} = 1.
+\end{equation*}
+
+\textit{(c)} For $P(t) = p_2 t^2 + p_1 t = 1$, we have the problem:
+
+\begin{equation*}
+  \min_{\mathbf{p}} \mathbf{p}^\top \mathbf{Q} \mathbf{p} \quad \text{s.t.} \quad \mathbf{A} \mathbf{p} = \mathbf{b},
+\end{equation*}
+
+where $\mathbf{Q} = \begin{bmatrix} 1 & 1 \\ 1 & \frac{4}{3} \end{bmatrix}, \mathbf{A} = [1, 1], \mathbf{b} = 1$.
+
+We import Lagrangian Function:
+
+\begin{equation}
+  \mathcal{L}(\mathbf{p}, \lambda) = \mathbf{p}^\top \mathbf{Q} \mathbf{p} - \lambda (\mathbf{A} \mathbf{p} - \mathbf{b}).
+\end{equation}
+
+It has a KKT case: the partial derivatives with respect to $\mathbf{p}$ is zero:
+
+\begin{equation*}
+  \frac{\partial \mathcal{L}}{\partial \mathbf{p}} = 2 \mathbf{Q} \mathbf{p} - \mathbf{A}^\top \lambda = 0 \quad \Rightarrow \quad 2 \mathbf{Q} \mathbf{p} = \mathbf{A}^\top \lambda.
+\end{equation*}
+
+Since $\mathbf{A} \mathbf{p} = \mathbf{b}$,
+
+\begin{equation*}
+  \mathbf{p} = \mathbf{Q}^{-1} \mathbf{A}^\top \left( \mathbf{A} \mathbf{Q}^{-1} \mathbf{A}^\top \right)^{-1} \mathbf{b}.
+\end{equation*}
+
+We got $p_1 = 1$, $p_2 = 0$, here the function is:
+
+\begin{equation*}
+  \mathbf{p}^\top \mathbf{Q} \mathbf{p} = [1, 0] \begin{bmatrix} 1 & 1 \\ 1 & \frac{4}{3} \end{bmatrix} \begin{bmatrix} 1 \\ 0 \end{bmatrix} = 1.
+\end{equation*}
+
+The result is: the optimal solution is $P(t) = t$, with the value of cost is $1$.
+
+\textit{3.} Sol.
+
+\textit{(a)} Similar to \textit{2.(a)(b)}, we have
+
+\begin{align*}
+  \int_0^1 \left( P^{(1)}(t) \right)^2 dt &= \int_0^1 \left( p_1 + 2p_2 t + 3p_3 t^2 \right)^2 dt \\
+  &= p_1^2 + 2p_1p_2 + 2p_1p_3 + \frac{4}{3}p_2^2 + 3p_2p_3 + \frac{9}{5}p_3^2.
+\end{align*}
+
+Therefore its symmetric matrix $\mathbf{Q} \in \mathbb{S}^3$ is:
+
+\begin{equation*}
+  \mathbf{Q} = \begin{bmatrix}
+  1 & 1 & 1 \\
+  1 & \frac{4}{3} & \frac{3}{2} \\
+  1 & \frac{3}{2} & \frac{9}{5}
+  \end{bmatrix}.
+\end{equation*}
+
+For $P(1) = 1$, there is $p_1 + p_2 + p_3 = 1$, so
+
+\begin{equation*}
+  \mathbf{A} = \begin{bmatrix} 1 & 1 & 1 \end{bmatrix}, \quad b = 1.
+\end{equation*}
+
+\textit{(b)} Similar to \textit{2.(c)}, we got
+
+\begin{equation*}
+\begin{cases}
+  p_1 + p_2 + p_3 &= 1, \\
+  p_1 + \frac{4}{3} p_2 + \frac{3}{2} p_3 &= 1, \\
+  p_1 + \frac{3}{2} p_2 + \frac{9}{5} p_3 &= 1.
+\end{cases}
+\end{equation*}
+
+That is $P(t) = t$, with $p_1 = 1$, $p_2 = 0$, $p_3 = 0$.
+
+\textit{4.} Sol.
+
+\textit{(a)} The constraints are:
+
+\begin{equation*}
+  P(1) = p_1 + p_2 = 1, \quad P^{(1)}(1) = p_1 + 2p_2 = -2.
+\end{equation*}
+
+Solving this linear system yields:
+
+\begin{equation*}
+  p_1 = 4, \quad p_2 = -3.
+\end{equation*}
+
+Thus, the optimal solution is:
+
+\begin{equation*}
+  P(t) = 4t - 3t^2.
+\end{equation*}
+
+Compute the optimal cost:
+\begin{align*}
+  \int_0^1 (P^{(1)}(t))^2 dt &= \int_0^1 (4 - 6t)^2 dt \\
+  &= \int_0^1 (16 - 48t + 36t^2) dt \\
+  &= \left[ 16t - 24t^2 + 12t^3 \right]_0^1 \\
+  &= 4.
+\end{align*}
+
+That is, the optimal solution is $P(t) = 4t - 3t^2$, and the optimal cost is $4$.
+
+\textit{(b)} Similarly, the constraints are:
+
+\begin{equation*}
+  P(1) = p_1 + p_2 + p_3 = 1, \quad P^{(1)}(1) = p_1 + 2p_2 + 3p_3 = -2.
+\end{equation*}
+
+Solving these gives:
+
+\begin{equation*}
+  p_1 = 4 + p_3, \quad p_2 = -3 - 2p_3.
+\end{equation*}
+
+The objective function is $\mathbf{p}^\top \mathbf{Q} \mathbf{p}$, where $\mathbf{Q}$ is:
+
+\begin{equation*}
+  \mathbf{Q} = \begin{bmatrix}
+  1 & 1 & 1 \\
+  1 & \frac{4}{3} & \frac{3}{2} \\
+  1 & \frac{3}{2} & \frac{9}{5}
+  \end{bmatrix}.
+\end{equation*}
+
+Substituting the parameterization yields a quadratic function in $p_3$:
+
+\begin{equation*}
+  f(p_3) = \frac{2}{15} p_3^2 + p_3 + 4.
+\end{equation*}
+
+Setting the derivative to zero:
+
+\begin{equation*}
+  \frac{df}{dp_3} = \frac{4}{15} p_3 + 1 = 0 \implies p_3 = -\frac{15}{4}.
+\end{equation*}
+
+Substituting back:
+
+\begin{equation*}
+  p_1 = 4 - \frac{15}{4} = \frac{1}{4}, \quad p_2 = -3 - 2\left(-\frac{15}{4}\right) = \frac{9}{2}.
+\end{equation*}
+
+Thus, the optimal solution is:
+
+\begin{equation*}
+  P(t) = \frac{1}{4} t + \frac{9}{2} t^2 - \frac{15}{4} t^3.
+\end{equation*}
+
+Compute the optimal cost:
+
+\begin{equation*}
+  \int_0^1 (P^{(1)}(t))^2 dt = \frac{17}{8}.
+\end{equation*}
+
+That is, the optimal solution is $P(t) = \frac{1}{4} t + \frac{9}{2} t^2 - \frac{15}{4} t^3$, and the optimal cost is $\frac{17}{8}$.
+
 \subsection{Deliverable - Multi-segment trajectory optimization}
