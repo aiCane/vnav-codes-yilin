@@ -204,3 +204,25 @@ Compute the optimal cost:
 That is, the optimal solution is $P(t) = \frac{1}{4} t + \frac{9}{2} t^2 - \frac{15}{4} t^3$, and the optimal cost is $\frac{17}{8}$.
 
 \subsection{Deliverable - Multi-segment trajectory optimization}
+
+\textit{1.} Sol.
+
+Since we minimize the value of $snap$, and through Euler-Lagrange equation, we have the term of constant to be $2r-1 = 7$, where $r = 4$.
+
+Consider there are $k$ parts, so there will be totally $8k$ unknown numbers.
+
+Waypoint constraints: There are a total of  points (including the start point, the end point, and $k-1$ intermediate points), resulting in $k+1$ waypoint constraints.
+
+Free derivative constraints: Each intermediate point requires 6 free derivative constraints, meaning continuity of velocity, acceleration, jerk, snap, crackle, and pop (i.e., continuity of derivatives from 1st to 6th order). Thus, there are $6(k-1)$ free derivative constraints.
+
+Fixed derivative constraints: The remaining constraints are provided by fixed derivative constraints, totaling $k+5$. These can be assigned to the start and end points—for example, by fixing certain derivatives at the start and others at the end—so that the total number of fixed derivative constraints is $k+5$.
+
+\textit{2.} Sol.
+
+Similarly, the waypoint constraints is still $k+1$. At the intermediate points (i.e., excluding the start and end points), we require the trajectory to connect smoothly. "Smooth" here means that the derivatives of order 1 through \(2r-2\) are equal on both sides of each intermediate point (position continuity is already ensured by the waypoint constraints). Each intermediate point contributes \(2r - 2\) constraints, and with \(k - 1\) intermediate points in total, there are \((2r - 2)(k - 1)\) free derivative constraints. The remaining constraints are provided by specifying derivatives at the start and end points. It can be shown through counting that \(2r + k - 3\) fixed derivative constraints are required. These can be flexibly allocated—for example, by assigning certain derivative values at the start point and others at the end point.
+
+That is,
+
+\begin{equation}
+  (k+1) + (2r-2)(k-1) + (2r+k-3) = 2rk.
+\end{equation}
