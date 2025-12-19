@@ -3,33 +3,44 @@
 This implementation focuses on generating minimum-snap trajectories for UAV navigation, heavily leveraging the \texttt{mav\_trajectory\_generation} library. The core task involves modifying three critical sections of the trajectory generation node to enable smooth waypoint following. Unlike Lab 3's geometric controller, this lab shifts focus to trajectory optimization – a fundamental capability for complex autonomous missions. The implementation is divided into three parts corresponding to ROS callback functions, with Part 1.2 being the most substantial.
 
 \subsection*{Part 1.1: Current State Estimation}
+
 In the \texttt{onCurrentState()} callback, we populate the Eigen vector \texttt{x} representing the UAV's current position. This is straightforward but crucial – inaccurate state estimation would propagate errors through the entire trajectory pipeline. I used \texttt{tf::pointMsgToEigen()} to convert ROS geometry messages to Eigen vectors, ensuring compatibility with the optimization library's data structures. This mirrors Lab 3's state handling but focuses exclusively on position rather than full pose estimation. The solution required no tuning but demanded careful attention to coordinate frames – all positions are expressed in the world frame as required by the trajectory optimizer.
+\ref{sub:onCurrentState}
 
 \subsection*{Part 1.2: Trajectory Vertex Construction}
+
 This is the heart of the lab, where we convert a sequence of ROS \texttt{PoseArray} messages into trajectory vertices for the polynomial optimizer. Two major challenges emerged:
 
 First, handling vertex constraints correctly: For intermediate waypoints, we only constrain position to allow natural velocity continuity, while the final vertex must be a hard endpoint (\texttt{makeStartOrEnd}) with zero velocity/acceleration. I implemented conditional logic to differentiate these cases during vertex construction. This required studying the library documentation to understand how \texttt{SNAP} (4th derivative) constraints affect trajectory smoothness.
 
 Second, and more critically, yaw angle unwrapping. Raw yaw values from ROS messages jump discontinuously between $-\pi$ and $\pi$, causing unnatural rotations when, for example, transitioning from 350$^\circ$ to 10$^\circ$. I implemented a standard unwrapping algorithm:
+
 \begin{minted}{cpp}
 while (current_yaw - last_yaw > M_PI) current_yaw -= 2 * M_PI;
 while (current_yaw - last_yaw < -M_PI) current_yaw += 2 * M_PI;
 \end{minted}
+
 This ensures monotonic yaw progression along the path. I verified correctness by printing unwrapped angles during debugging – without this, the UAV would violently spin when crossing the $180^\circ$ boundary.
 
 Additionally, I experimented with the segment time scaling factor (initially set to 0.6x estimated times). While the lab suggested playing with this, I found aggressive time reduction caused high accelerations that violated motor constraints during physical testing. The 0.6x factor provided the best trade-off between speed and feasibility in simulation.
+\ref{sub:generateOptimizedTrajectory}
 
 \subsection*{Part 1.3: Trajectory Sampling}
+
 In the \texttt{publishDesiredState()} timer callback, we sample the optimized trajectory at the current time. Key implementation details
+
 \begin{itemize}
   \item Time clamping prevents extrapolation beyond the trajectory duration
   \item Position, velocity, and acceleration are sampled separately using derivative orders (\texttt{POSITION}, \texttt{VELOCITY}, etc.)
   \item Yaw trajectory is sampled independently and converted to quaternion rotation
   \item Feedforward angular rates are set to zero since the low-level controller handles attitude tracking
 \end{itemize}
+
 A subtle issue arose when the trajectory was empty (e.g., at startup). I added a hover mode that publishes zero velocity/acceleration commands at the current position – this prevented erratic takeoffs during initialization. The high publishing rate (100Hz) was critical for smooth tracking; reducing it below 50Hz caused visible jerking in RViz visualizations.
+\ref{sub:publishDesiredState}
 
 \subsection*{Results and Tuning}
+
 The trajectory generator successfully navigated all course waypoints in simulation. The yaw unwrapping (Part 1.2) proved essential – without it, the UAV executed unnecessary 360° rotations at certain waypoints. I tuned the velocity/acceleration limits ($v_{max}=15.0$ m/s, $a_{max}=10.0$ m/s²) to match the UAV's physical capabilities observed in Lab 3. The time scaling factor (0.6x) was determined empirically: smaller values caused trajectory optimization failures due to infeasible dynamics, while larger values made the UAV too slow for the racing scenario.
 
-The UAV follows the path smoothly with coordinated turns, though minor overshoots occur at sharp corners – likely due to aggressive time scaling. Future work could incorporate velocity constraints at intermediate waypoints to improve cornering behavior.
+The UAV follows the path smoothly with coordinated turns, though minor overshoots occur at sharp corners – likely due to aggressive time scaling. Future work could incorporate velocity constraints at intermediate waypoints to improve cornering behavior (\ref{fig:test}).
