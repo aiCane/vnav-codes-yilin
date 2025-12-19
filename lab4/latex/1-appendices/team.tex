@@ -1,1 +1,227 @@
-\section{Team}
+\begin{figure*}[!t]
+  % ensure that we have normalsize text
+  \normalsize
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/result}
+  \caption{Our drone succussfully passed the test, with the left up corner stores the start commands, the left down corner is the terminal, the right up corner placed a rviz program, the right down corner is the testing window.}
+  \label{fig:test}
+  % The spacer can be tweaked to stop underfull vboxes.
+  \vspace*{4pt}
+\end{figure*}
+
+\section{Codes}
+
+\subsection*{Part 1.1: Current State Estimation}
+\label{sub:onCurrentState}
+
+\begin{minted}{cpp}
+void onCurrentState(nav_msgs::Odometry const& cur_state) {
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //  PART 1.1 |  16.485 - Fall 2021  - Lab 4 coding assignment (5 pts)
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //
+  //  Populate the variable x, which encodes the current world position of the UAV
+  // ~~~~ begin solution
+  
+  tf::pointMsgToEigen(cur_state.pose.pose.position, x);
+
+  // ~~~~ end solution
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+}
+\end{minted}
+
+\subsection*{Part 1.2: Trajectory Vertex Construction}
+\label{sub:generateOptimizedTrajectory}
+
+\begin{minted}{cpp}
+void generateOptimizedTrajectory(geometry_msgs::PoseArray const& poseArray) {
+  if (poseArray.poses.size() < 1) {
+    ROS_ERROR("Must have at least one pose to generate trajectory!");
+    trajectory.clear();
+    yaw_trajectory.clear();
+    return;
+  }
+
+  if (!trajectory.empty()) return;
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //  PART 1.2 |  16.485 - Fall 2021  - Lab 4 coding assignment (35 pts)
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  const int D = 3;  // dimension of each vertex in the trajectory
+  mav_trajectory_generation::Vertex start_position(D), end_position(D);
+  mav_trajectory_generation::Vertex::Vector vertices;
+  mav_trajectory_generation::Vertex start_yaw(1), end_yaw(1);
+  mav_trajectory_generation::Vertex::Vector yaw_vertices;
+
+  // ============================================
+  // Convert the pose array to a list of vertices
+  // ============================================
+
+  // Start from the current position and zero orientation
+  using namespace mav_trajectory_generation::derivative_order;
+  start_position.makeStartOrEnd(x, SNAP);
+  vertices.push_back(start_position);
+  
+  start_yaw.addConstraint(ORIENTATION, 0);
+  yaw_vertices.push_back(start_yaw);
+
+  double last_yaw = 0;
+  
+  for (auto i = 0; i < poseArray.poses.size(); ++i) {
+    // ~~~~ begin solution
+    
+    
+    Eigen::Vector3d pos_eigen;
+    tf::pointMsgToEigen(poseArray.poses[i].position, pos_eigen);
+
+    mav_trajectory_generation::Vertex pos_vertex(D);
+    
+    if (i == poseArray.poses.size() - 1) {
+        pos_vertex.makeStartOrEnd(pos_eigen, SNAP);
+    } else {
+        pos_vertex.addConstraint(POSITION, pos_eigen);
+    }
+    vertices.push_back(pos_vertex);
+
+
+    double current_yaw = tf::getYaw(poseArray.poses[i].orientation);
+
+    while (current_yaw - last_yaw > M_PI) current_yaw -= 2 * M_PI;
+    while (current_yaw - last_yaw < -M_PI) current_yaw += 2 * M_PI;
+
+    mav_trajectory_generation::Vertex yaw_vertex(1);
+    yaw_vertex.addConstraint(ORIENTATION, current_yaw);
+    yaw_vertices.push_back(yaw_vertex);
+
+    last_yaw = current_yaw;
+
+    // ~~~~ end solution
+  }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  // ============================================================
+  // Estimate the time to complete each segment of the trajectory
+  // ============================================================
+
+  // HINT: play with these segment times and see if you can finish
+  // the race course faster!
+  std::vector<double> segment_times;
+  const double v_max = 15.0;
+  const double a_max = 10.0;
+  segment_times = estimateSegmentTimes(vertices, v_max, a_max);
+  for(int i = 0; i < segment_times.size(); i++) {
+    segment_times[i] *= 0.6;
+  }
+
+  // =====================================================
+  // Solve for the optimized trajectory (linear optimizer)
+  // =====================================================
+  // Position
+  const int N = 10;
+  mav_trajectory_generation::PolynomialOptimization<N> opt(D);
+  opt.setupFromVertices(vertices, segment_times, mav_trajectory_generation::derivative_order::SNAP);
+  opt.solveLinear();
+
+  // Yaw
+  mav_trajectory_generation::PolynomialOptimization<N> yaw_opt(1);
+  yaw_opt.setupFromVertices(yaw_vertices, segment_times, mav_trajectory_generation::derivative_order::SNAP);
+  yaw_opt.solveLinear();
+
+  // ============================
+  // Get the optimized trajectory
+  // ============================
+  mav_trajectory_generation::Segment::Vector segments;
+  opt.getTrajectory(&trajectory);
+  yaw_opt.getTrajectory(&yaw_trajectory);
+  trajectoryStartTime = ros::Time::now();
+
+  ROS_INFO("Generated optimizes trajectory from %lu waypoints", vertices.size());
+}
+\end{minted}
+
+\subsection*{Part 1.3: Trajectory Sampling}
+\label{sub:publishDesiredState}
+
+\begin{minted}{cpp}
+void publishDesiredState(ros::TimerEvent const& ev) {
+  if (trajectory.empty()) {
+      trajectory_msgs::MultiDOFJointTrajectoryPoint hover_point;
+      
+      hover_point.time_from_start = ros::Duration(0.0);
+
+      geometry_msgs::Transform transform;
+      tf::vectorEigenToMsg(x, transform.translation);
+      
+      transform.rotation = tf::createQuaternionMsgFromYaw(0); 
+      hover_point.transforms.push_back(transform);
+
+      geometry_msgs::Twist velocity;
+      velocity.linear.x = 0; velocity.linear.y = 0; velocity.linear.z = 0;
+      velocity.angular.x = 0; velocity.angular.y = 0; velocity.angular.z = 0;
+      hover_point.velocities.push_back(velocity);
+
+      geometry_msgs::Twist accel;
+      accel.linear.x = 0; accel.linear.y = 0; accel.linear.z = 0;
+      accel.angular.x = 0; accel.angular.y = 0; accel.angular.z = 0;
+      hover_point.accelerations.push_back(accel);
+
+      desiredStatePub.publish(hover_point);
+      return;
+  }
+
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //  PART 1.3 |  16.485 - Fall 2021  - Lab 4 coding assignment (15 pts)
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  // ~~~~ begin solution
+  
+
+  trajectory_msgs::MultiDOFJointTrajectoryPoint next_point;
+  
+  ros::Duration time_from_start = ros::Time::now() - trajectoryStartTime;
+  next_point.time_from_start = time_from_start; 
+
+  double sampling_time = time_from_start.toSec(); 
+
+  if (sampling_time > trajectory.getMaxTime())
+    sampling_time = trajectory.getMaxTime();
+
+  // Getting the desired state based on the optimized trajectory we found.
+  using namespace mav_trajectory_generation::derivative_order;
+  Eigen::Vector3d des_position = trajectory.evaluate(sampling_time, POSITION);
+  Eigen::Vector3d des_velocity = trajectory.evaluate(sampling_time, VELOCITY);
+  Eigen::Vector3d des_accel = trajectory.evaluate(sampling_time, ACCELERATION);
+  Eigen::VectorXd des_orientation = yaw_trajectory.evaluate(sampling_time, ORIENTATION);
+  
+  // ROS_INFO_THROTTLE(1.0, "Traversed %f percent of the trajectory.",
+  //                   sampling_time / trajectory.getMaxTime() * 100);
+
+  // Populate next_point
+
+  geometry_msgs::Transform transform;
+  tf::vectorEigenToMsg(des_position, transform.translation);
+  tf::quaternionTFToMsg(tf::createQuaternionFromYaw(des_orientation(0)), transform.rotation);
+  next_point.transforms.push_back(transform);
+
+  geometry_msgs::Twist velocity;
+  tf::vectorEigenToMsg(des_velocity, velocity.linear);
+  velocity.angular.x = 0; 
+  velocity.angular.y = 0; 
+  velocity.angular.z = 0;
+  next_point.velocities.push_back(velocity);
+
+  geometry_msgs::Twist accel;
+  tf::vectorEigenToMsg(des_accel, accel.linear);
+  accel.angular.x = 0;
+  accel.angular.y = 0;
+  accel.angular.z = 0;
+  next_point.accelerations.push_back(accel);
+
+  // ~~~~ end solution
+  // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  desiredStatePub.publish(next_point);
+}
+\end{minted}
