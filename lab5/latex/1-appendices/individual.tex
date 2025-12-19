@@ -1,0 +1,30 @@
+\section{Individual}
+
+\subsection{Deliverable - Practice with Perspective Projection}
+
+Consider a sphere with radius $r$ centered at $[0~0~d]$ with respect to the camera coordinate frame (centered at the optical center and with axis oriented as discussed in class). Assume $d > r + 1$ and assume that the camera has principal point at $(0, 0)$, focal length equal to 1, pixel sizes $s_x = s_y = 1$ and zero skew $s_\theta = 0$ (see lecture notes for notation) the following exercises:
+
+\begin{enumerate}
+  \item \textbf{Derive} the equation describing the projection of the sphere onto the image plane.
+
+  {\small \color{gray} Hint: Think about what shape you expect the projection on the image plane to be, and then derive a characteristic equation for that shape in the image plane coordinates $u, v$ along with $r$ and $d$.}
+
+  \item \textbf{Discuss} what the projection becomes when the center of the sphere is at an arbitrary location, not necessarily along the optical axis. What is the shape of the projection?
+\end{enumerate}
+
+\subsection{Deliverable - Vanishing Points}
+
+Consider two 3D lines that are parallel to each other. As we have seen in the lectures, lines that are parallel in 3D may project to intersecting lines on the image plane. The pixel at which two 3D parallel lines intersect in the image plane is called a vanishing point. Assume a camera with principal point at (0,0), focal length equal to 1, pixel sizes $s_x = s_y = 1$ and zero skew $s_\theta = 0$ (see lecture notes for notation). Complete the following exercises:
+
+\begin{enumerate}
+  \item \textbf{Derive} the generic expression of the vanishing point corresponding to two parallel 3D lines.
+  \item \textbf{Find (and prove mathematically)} a condition under which 3D parallel lines remain parallel in the image plane.
+\end{enumerate}
+
+{\small \color{gray}
+  Hint: For both 1. and 2. you may use two different approaches:
+
+  \textbf{Algebraic approach}: a 3D line can be written as a set of points $p(\lambda) = p_0 + \lambda u$ where $p_0 \in \mathbb{R}^3$ is a point on the line, $u \in \mathbb{R}^3$ is a unit vector along the direction of the line, and $\lambda \in \mathbb{R}$.
+
+  \textbf{Geometric approach}: the projection of a 3D line can be understood as the intersection beetween two planes.
+}

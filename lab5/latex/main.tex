@@ -1,0 +1,56 @@
+\documentclass{IEEEtran}
+
+\usepackage{minted}
+\usepackage[svgnames]{xcolor}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{empheq}
+
+% Using package subcaption with in IEEEtran class may cause the warning below, just ignore it.
+% Unknown document class (or package), standard defaults will be used
+
+\usepackage{hyperref}
+\usepackage{cite}
+
+\usepackage{graphicx}
+
+\setminted{
+	breaklines,
+	breakanywhere,
+	obeytabs=true,
+	tabsize=2,
+	bgcolor=AliceBlue,
+	fontsize=\small
+}
+
+\title{\LARGE \bf
+	Lab 5 Report: EXERCISES
+}% <-this % stops a space
+\author{Yilin Zhang~$^{1}$. Lab Group: 31.
+	\thanks{$^{1}$Yilin zhang, OUC id: 23020036094,
+					is with Faculty of Robotics and Computer Science,
+					Ocean University of China and Heriot-Watt University, China Mainland
+					{\tt\small zyl8820@stu.ouc.edu.cn}
+	}
+}% <-this % stops a space
+
+\begin{document}
+
+\maketitle
+
+\input{0-sections/individual}
+\input{0-sections/team}
+\input{0-sections/words}
+
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv, refs}
+
+\appendices
+
+\setminted{fontsize=\footnotesize}
+
+\input{1-appendices/individual}
+\input{1-appendices/team}
+
+\end{document}
