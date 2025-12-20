@@ -6,11 +6,11 @@ We provide you with skeleton code for the base class FeatureTracker that provide
 
 Inside the \texttt{lab5} folder, we provide you with two images `box.png' and `box\_in\_scene.png' (inside the \texttt{images} folder).
 
-We will first ask you to extract keypoints from both images using SIFT. For that, we refer you to the skeleton code in the \texttt{src} folder named \texttt{track\_features.cpp}. Follow the instructions written in the comments; specifically, you will need to complete:
+We will first ask you to extract keypoints from both images using SIFT. For that, we refer you to the skeleton code in the \texttt{src} folder named \lstinline{track_features.cpp}. Follow the instructions written in the comments; specifically, you will need to complete:
 
 \begin{itemize}
-  \item The stub {\small \ttfamily SiftFeatureTracker::detectKeypoints()} and {\small \ttfamily SiftFeatureTracker::describeKeypoints()} in {\small \ttfamily lab5/feature\_tracking/src/sift\_feature\_tracker.cpp}
-  \item The first part of {\small \ttfamily FeatureTracker::trackFeatures()} in {\small \ttfamily lab5/feature\_tracking/src/feature\_tracker.cpp}
+  \item The stub \lstinline{SiftFeatureTracker::detectKeypoints()} and \lstinline{SiftFeatureTracker::describeKeypoints()} in \lstinline{lab5/feature_tracking/src/sift_feature_tracker.cpp}
+  \item The first part of \lstinline{FeatureTracker::trackFeatures()} in \lstinline{lab5/feature_tracking/src/feature_tracker.cpp}
 \end{itemize}
 
 Once you have implemented SIFT, you can test it by running:
@@ -43,26 +43,26 @@ In this exercise, we will ask you to use the FLANN (Fast Approximate Nearest Nei
 \begin{enumerate}
   \item What is the dimension of the SIFT descriptors you computed?
   \item Compute and plot the matches that you found from the \textit{box.png} image to the \textit{box\_in\_scene.png}.
-  \item You might notice that naively matching features results in a significant amount of false positives (outliers). There are different techniques to minimize this issue. The one proposed by the authors of SIFT was to calculate the best two matches for a given descriptor and calculate the ratio between their distances: {\small \ttfamily Match1.distance < 0.8 * Match2.distance}. This ensures that we do not consider descriptors that have been ambiguously matched to multiple descriptors in the target image. Here we used the threshold value that the SIFT authors proposed (0.8).
+  \item You might notice that naively matching features results in a significant amount of false positives (outliers). There are different techniques to minimize this issue. The one proposed by the authors of SIFT was to calculate the best two matches for a given descriptor and calculate the ratio between their distances: \lstinline{Match1.distance < 0.8 * Match2.distance}. This ensures that we do not consider descriptors that have been ambiguously matched to multiple descriptors in the target image. Here we used the threshold value that the SIFT authors proposed (0.8).
   \item Compute and plot the matches that you found from the \textit{box.png} image to the \textit{box\_in\_scene.png} after applying the filter that we just described. You should notice a significant reduction of outliers.
 \end{enumerate}
 
 Specifically, you will need to complete:
 
 \begin{itemize}
-  \item The stub {\small \ttfamily SiftFeatureTracker::matchDescriptors()} in {\small \ttfamily feature\_tracking/src/sift\_feature\_tracker.cpp}
-  \item The second part of {\small \ttfamily FeatureTracker::trackFeatures()} in {\small \ttfamily feature\_tracking/src/feature\_tracker.cpp}
+  \item The stub \lstinline{SiftFeatureTracker::matchDescriptors()} in \lstinline{feature_tracking/src/sift_feature_tracker.cpp}
+  \item The second part of \lstinline{FeatureTracker::trackFeatures()} in \lstinline{feature_tracking/src/feature_tracker.cpp}
 
   {\small \color{gray}
     Hint: Note that the \texttt{matches} object is a pointer type, so to use it you will usually have to type \texttt{*matches}. Once you’ve used the FLANN matcher to get the matches, if you want to iterate over all of them you could use a loop like:
 
-    {\ttfamily
-      for (auto\& match : *matches) {
-      // check match.size(), match[0].distance, match[1].distance, etc.
-      }
-    }
+    \begin{minted}{cpp}
+for (auto& match : *matches) {
+// check match.size(), match[0].distance, match[1].distance, etc.
+}
+    \end{minted}
 
-    Likewise, \texttt{good\_matches} is a pointer so to add to it you will need \texttt{good\_matches->push\_back(...)}.
+    Likewise, \texttt{good\_matches} is a pointer so to add to it you will need \lstinline{good_matches->push_back(...)}.
   }
 \end{itemize}
 
@@ -81,13 +81,15 @@ For now, let us just use a blackbox function which, given the keypoints correspo
   \end{figure}
 
   {\small \color{gray}
-    Hint: Note that \texttt{FeatureTracker::inlierMaskComputation} computes an inlier mask of type \texttt{std::vector<uchar>}, but for \texttt{cv::drawMatches} you will need a \texttt{std::vector<char>}. You can go from one to the other by using:
+    Hint: Note that \lstinline{FeatureTracker::inlierMaskComputation} computes an inlier mask of type \lstinline{std::vector<uchar>}, but for \lstinline{cv::drawMatches} you will need a \lstinline{std::vector<char>}. You can go from one to the other by using:
 
-    {\ttfamily std::vector<char> char\_inlier\_mask{inlier\_mask.begin(), inlier\_mask.end()};}
+    \lstinline!std::vector<char> char_inlier_mask{inlier_mask.begin(), inlier_mask.end()};!
+    % {\ttfamily std::vector<char> char\_inlier\_mask{inlier\_mask.begin(), inlier\_mask.end()};}
 
-    Hint: You will need to call the \texttt{cv::drawMatches} function twice, first to plot the everything in red (using \texttt{cv::Scalar(0,0,255}) as the color), and then again to plot inliers in green (using the inlier mask and \texttt{cv::Scalar(0,255,0)}). The second time, you will need to use the \texttt{DrawMatchesFlags::DRAW\_OVER\_OUTIMG} flag to draw on top of the first output. To combine flags for the \texttt{cv::drawMatches} function, use the bitwise-or operator:
+    Hint: You will need to call the \lstinline{cv::drawMatches} function twice, first to plot the everything in red (using \lstinline{cv::Scalar(0,0,255}) as the color), and then again to plot inliers in green (using the inlier mask and \lstinline{cv::Scalar(0,255,0)}). The second time, you will need to use the \lstinline{DrawMatchesFlags::DRAW_OVER_OUTIMG} flag to draw on top of the first output. To combine flags for the \lstinline{cv::drawMatches} function, use the bitwise-or operator:
 
-    {\ttfamily DrawMatchesFlags::NOT\_DRAW\_SINGLE\_POINTS | DrawMatchesFlags::DRAW\_OVER\_OUTIMG}
+    \lstinline{DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS | DrawMatchesFlags::DRAW_OVER_OUTIMG}
+    % {\ttfamily DrawMatchesFlags::NOT\_DRAW\_SINGLE\_POINTS | DrawMatchesFlags::DRAW\_OVER\_OUTIMG}
   }
 
   \item Now, we can calculate useful statistics to compare feature tracking algorithms. First, let’s compute statistics for SIFT. The code for computing the statistics is already included in the skeleton file. You just need to use the appropriate functions to print them out. Submit a table similar to the following for SIFT (you might not get the same results, but they should be fairly similar):
@@ -109,7 +111,7 @@ Fill the previous table with results for other feature tracking algorithms. We a
   \item \href{https://docs.opencv.org/3.4.2/d1/d89/tutorial_py_orb.html}{ORB} (we will use it for SLAM later!)
   \item Optional : \href{https://docs.opencv.org/3.4.2/df/d0c/tutorial_py_fast.html}{FAST} (detector) + \href{https://docs.opencv.org/3.4.2/dc/d7d/tutorial_py_brief.html}{BRIEF} (descriptor)
 
-  {\small \color{gray} Hint: The SURF functions can be implemented exactly the same as SIFT, while ORB and FAST can also be implemented exactly the same way except that the FLANN matcher must be initialized with a new parameter like this: \texttt{FlannBasedMatcher matcher(new flann::LshIndexParams(20, 10, 2));}. This is not necessarily the best solution for ORB and FAST however, so we encourage you to look into other methods (e.g. the \href{https://docs.opencv.org/3.4.2/dc/dc3/tutorial_py_matcher.html}{Brute-Force matcher} instead of the FLANN matcher) if you have time. Note for BRIEF, you will need to create a \href{https://docs.opencv.org/3.4.20/d1/d93/classcv_1_1xfeatures2d_1_1BriefDescriptorExtractor.html}{BriefDescriptorExtractor} to create keypoint descriptors when implementing FAST+BRIEF.}
+  {\small \color{gray} Hint: The SURF functions can be implemented exactly the same as SIFT, while ORB and FAST can also be implemented exactly the same way except that the FLANN matcher must be initialized with a new parameter like this: \lstinline{FlannBasedMatcher matcher(new flann::LshIndexParams(20, 10, 2));}. This is not necessarily the best solution for ORB and FAST however, so we encourage you to look into other methods (e.g. the \href{https://docs.opencv.org/3.4.2/dc/dc3/tutorial_py_matcher.html}{Brute-Force matcher} instead of the FLANN matcher) if you have time. Note for BRIEF, you will need to create a \href{https://docs.opencv.org/3.4.20/d1/d93/classcv_1_1xfeatures2d_1_1BriefDescriptorExtractor.html}{BriefDescriptorExtractor} to create keypoint descriptors when implementing FAST+BRIEF.}
 \end{enumerate}
 
 We have provided method stubs in the corresponding header files for you to implement in the CPP files. Please refer to the OpenCV documentation, tutorials, and C++ API when filling them in. You are encouraged to modify the default parameters used by the features extractors and matchers. A complete answer to this deliverable should include a brief discussion of what you tried and what worked the best.
@@ -144,7 +146,7 @@ roslaunch lab_5 video_tracking.launch path_to_dataset:=/home/$USER/Downloads/<NA
 
 You will need to first specify in the launch file the path to your downloaded dataset. Once you’re done, you should get something like this:
 
-{\small \color{gray} Hint: You may need to change your plotting code in \texttt{FeatureTracker::trackFeatures} to call \texttt{cv::waitKey(10)} instead of \texttt{cv::waitKey(0)} after imshow in order to get the video to play continuously instead of frame-by-frame on every keypress.}
+{\small \color{gray} Hint: You may need to change your plotting code in \lstinline{FeatureTracker::trackFeatures} to call \lstinline{cv::waitKey(10)} instead of \lstinline{cv::waitKey(0)} after imshow in order to get the video to play continuously instead of frame-by-frame on every keypress.}
 
 Finally, we ask you to summarize your results in one table for each dataset and asnwer some questions:
 
@@ -186,9 +188,9 @@ So far we have worked with descriptor-based matching approaches. As you have see
   \item What assumption about the features does the LK tracker rely on?
   \item Comment on the different results you observe between the table in this section and the one you computed in the other sections.
 
-  {\small \color{gray} Hint: You will need to convert the image to grayscale with \texttt{cv::cvtColor} and will want to look into the documentation for \texttt{cv::goodFeaturesToTrack} and \texttt{cv::calcOpticalFlowPyrLK}. The rest of the trackFeatures() function should be mostly familiar feature matching and inlier mask computation similar to the previous sections. Also note that the \texttt{status} vector from calcOpticalFlowPyrLK indicates the matches.}
+  {\small \color{gray} Hint: You will need to convert the image to grayscale with \lstinline{cv::cvtColor} and will want to look into the documentation for \lstinline{cv::goodFeaturesToTrack} and \lstinline{cv::calcOpticalFlowPyrLK}. The rest of the trackFeatures() function should be mostly familiar feature matching and inlier mask computation similar to the previous sections. Also note that the \texttt{status} vector from calcOpticalFlowPyrLK indicates the matches.}
 
-  {\small \color{gray} Hint: For the show() method, you will just need to create a copy of the input frame and then make a loop that calls \texttt{cv::line} and \texttt{cv::circle} with correct arguments before calling \texttt{imshow}.}
+  {\small \color{gray} Hint: For the show() method, you will just need to create a copy of the input frame and then make a loop that calls \lstinline{cv::line} and \lstinline{cv::circle} with correct arguments before calling \texttt{imshow}.}
 \end{enumerate}
 
 \subsection{[Optional] Deliverable - Optical Flow}
