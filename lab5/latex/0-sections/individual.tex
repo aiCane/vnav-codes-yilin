@@ -1,1 +1,170 @@
 \section{Individual}
+
+\subsection{Deliverable - Practice with Perspective Projection}
+
+1. Sol. 
+
+Consider a sphere of radius \(r\) centered at \((0, 0, d)\), where \(d > r + 1\). Camera parameters: focal length \(f = 1\), principal point \((0, 0)\), pixel sizes \(s_x = s_y = 1\), zero skew. Image plane coordinates are denoted as \((u, v)\), corresponding to the projection relations \(u = X/Z\), \(v = Y/Z\), where \((X, Y, Z)\) is a 3D point in the camera coordinate system.
+
+The sphere equation is:
+
+\begin{equation}
+X^2 + Y^2 + (Z - d)^2 = r^2.
+\end{equation}
+
+Substituting \(X = uZ\) and \(Y = vZ\) gives:  
+
+\begin{equation*}
+(uZ)^2 + (vZ)^2 + (Z - d)^2 = r^2.
+\end{equation*}
+
+Expanding and rearranging into a quadratic equation in \(Z\):  
+
+\begin{equation*}
+Z^2(u^2 + v^2 + 1) - 2dZ + (d^2 - r^2) = 0.
+\end{equation*}
+
+For a given \((u, v)\), if this equation has a positive real solution \(Z\) (i.e., a point on the sphere and in front of the camera), then \((u, v)\) lies within the projection region. The condition for existence of real solutions is that the discriminant is nonnegative:
+
+\begin{equation*}
+\Delta = (-2d)^2 - 4(u^2 + v^2 + 1)(d^2 - r^2) \geq 0.
+\end{equation*}
+
+Simplifying:
+
+\begin{equation*}
+d^2 - (u^2 + v^2 + 1)(d^2 - r^2) \geq 0.
+\end{equation*}
+
+Since \(d > r\), we have \(d^2 - r^2 > 0\), leading to:
+
+\begin{equation*}
+u^2 + v^2 + 1 \leq \frac{d^2}{d^2 - r^2}.
+\end{equation*}
+
+Thus:
+
+\begin{equation*}
+u^2 + v^2 \leq \frac{r^2}{d^2 - r^2}.
+\end{equation*}
+
+Therefore, the projection region is a disk, whose boundary is the circle:
+
+\begin{equation}
+u^2 + v^2 = \frac{r^2}{d^2 - r^2}.
+\end{equation}
+
+The radius of this circle is \(R = \dfrac{r}{\sqrt{d^2 - r^2}}\).
+
+2. Sol.
+
+Let the sphere center be at \((a, b, d)\), still satisfying \(d > r + 1\). The sphere equation becomes:
+
+\begin{equation}
+(X - a)^2 + (Y - b)^2 + (Z - d)^2 = r^2.
+\end{equation}
+
+Substituting \(X = uZ\), \(Y = vZ\) gives:
+
+\begin{equation*}
+(uZ - a)^2 + (vZ - b)^2 + (Z - d)^2 = r^2.
+\end{equation*}
+
+Expanding and rearranging into a quadratic in \(Z\):
+
+\begin{equation*}
+(u^2 + v^2 + 1)Z^2 - 2(au + bv + d)Z + (a^2 + b^2 + d^2 - r^2) = 0.
+\end{equation*}
+
+The nonnegative discriminant condition yields:
+
+\begin{equation*}
+[2(au + bv + d)]^2 - 4(u^2 + v^2 + 1)(a^2 + b^2 + d^2 - r^2) \geq 0.
+\end{equation*}
+
+Define \(L^2 = a^2 + b^2 + d^2\). Simplifying gives:
+
+\begin{equation*}
+(au + bv + d)^2 \geq (u^2 + v^2 + 1)(L^2 - r^2).
+\end{equation*}
+
+Expanding and rearranging into a quadratic inequality yields
+
+\begin{equation}
+A u^2 + B uv + C v^2 + D u + E v + F \leq 0,
+\end{equation}
+
+where
+
+\begin{align*}
+A &= b^2 + d^2 - r^2, \quad & B &= -2ab, \quad & C &= a^2 + d^2 - r^2, \\
+D &= -2ad, \quad & E &= -2bd, \quad & F &= a^2 + b^2 - r^2.
+\end{align*}
+
+This inequality represents an elliptical disk (including its interior). When \(a = b = 0\), it reduces to a circular disk. In general, the projection is an ellipse whose shape and orientation depend on the sphere center position \((a, b, d)\). Since the sphere is convex and entirely in front of the camera (\(d - r > 0\)), the projection region is convex; thus, the ellipse is closed.
+
+\subsection{Deliverable - Vanishing Points}
+
+1. Sol.
+
+Consider two 3D lines parallel to a direction vector \(\mathbf{u} = (u_x, u_y, u_z)^\top\). Under the given camera model (intrinsic matrix is identity), the projection of a 3D point \((X, Y, Z)\) onto the image plane is \((x, y) = (X/Z, Y/Z)\).  
+
+Parameterize one line as \(\mathbf{p}(\lambda) = \mathbf{p}_0 + \lambda \mathbf{u}\), where \(\mathbf{p}_0 = (X_0, Y_0, Z_0)\) and \(\lambda \in \mathbb{R}\). Its projection is:
+
+\begin{equation*}
+\mathbf{x}_1(\lambda) = \left( \frac{X_0 + \lambda u_x}{Z_0 + \lambda u_z},\; \frac{Y_0 + \lambda u_y}{Z_0 + \lambda u_z} \right).
+\end{equation*}
+
+As \(\lambda \to \infty\), the projected point tends to \((u_x/u_z, u_y/u_z)\) provided \(u_z \neq 0\). This limit point is independent of \(\mathbf{p}_0\) and is common to all lines parallel to \(\mathbf{u}\). Thus, the projections of any two such lines intersect at this point, known as the vanishing point.  
+
+If \(u_z = 0\), the denominator remains constant, and the projection becomes:
+
+\begin{equation*}
+\mathbf{x}_1(\lambda) = \left( \frac{X_0}{Z_0} + \lambda \frac{u_x}{Z_0},\; \frac{Y_0}{Z_0} + \lambda \frac{u_y}{Z_0} \right),
+\end{equation*}
+
+which is a line with direction \((u_x, u_y)\) scaled by \(1/Z_0\). In this case, the vanishing point is at infinity, and the projected lines remain parallel.
+
+Therefore, the generic expression for the vanishing point is:
+
+\begin{equation}
+\mathbf{v} = \left( \frac{u_x}{u_z},\; \frac{u_y}{u_z} \right) \quad \text{for } u_z \neq 0.
+\end{equation}
+
+If \(u_z = 0\), the vanishing point is at infinity.
+
+2. Claim: 3D parallel lines remain parallel in the image plane if and only if their direction vector satisfies \(u_z = 0\), i.e., the lines are parallel to the image plane.
+
+Proof:
+
+Consider two parallel lines with direction \(\mathbf{u} = (a, b, c)\):
+
+\begin{align*}
+\mathbf{p}(\lambda) &= \mathbf{p}_0 + \lambda \mathbf{u} \\
+    \mathbf{q}(\mu) &= \mathbf{q}_0 + \mu \mathbf{u},
+\end{align*}
+
+where \(\mathbf{p}_0 = (X_0, Y_0, Z_0)\), \(\mathbf{q}_0 = (X_0', Y_0', Z_0')\), and \(Z_0, Z_0' > 0\). Their projections are:
+
+\begin{align*}
+\mathbf{x}_1(\lambda) &= \left( \frac{X_0 + \lambda a}{Z_0 + \lambda c},\; \frac{Y_0 + \lambda b}{Z_0 + \lambda c} \right), \\
+    \mathbf{x}_2(\mu) &= \left( \frac{X_0' + \mu a}{Z_0' + \mu c},\; \frac{Y_0' + \mu b}{Z_0' + \mu c} \right).
+\end{align*}
+
+These are straight lines in the image. Their tangent directions (constant along each line) are proportional to:
+
+\begin{align*}
+\mathbf{d}_1 &= (a Z_0 - c X_0,\; b Z_0 - c Y_0), \\
+\mathbf{d}_2 &= (a Z_0' - c X_0',\; b Z_0' - c Y_0').
+\end{align*}
+
+The projected lines are parallel if and only if \(\mathbf{d}_1\) and \(\mathbf{d}_2\) are parallel, i.e., \(\mathbf{d}_1 \times \mathbf{d}_2 = 0\).
+
+\begin{itemize}
+  \item If \(c = 0\) (i.e., \(u_z = 0\)), then \(\mathbf{d}_1 = (a Z_0, b Z_0)\) and \(\mathbf{d}_2 = (a Z_0', b Z_0')\). Both are scalar multiples of \((a, b)\), so the lines are parallel regardless of \(\mathbf{p}_0\) and \(\mathbf{q}_0\).
+  \item If \(c \neq 0\), then \(\mathbf{d}_1\) and \(\mathbf{d}_2\) generally depend on \(\mathbf{p}_0\) and \(\mathbf{q}_0\). For arbitrary choices, they are not parallel, and the lines intersect at the vanishing point \((a/c, b/c)\). Hence, the projected lines are not parallel.
+\end{itemize}
+
+Thus, for arbitrary 3D parallel lines (not passing through the camera center) to remain parallel in the image, the necessary and sufficient condition is \(u_z = 0\). This means the lines are parallel to the image plane.
+
+That is, 3D parallel lines remain parallel in the image plane if and only if their direction vector satisfies \(u_z = 0\).
