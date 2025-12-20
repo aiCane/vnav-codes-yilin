@@ -1,5 +1,6 @@
 \documentclass{IEEEtran}
 
+\usepackage{listings}
 \usepackage{minted}
 \usepackage[svgnames]{xcolor}
 
@@ -14,6 +15,13 @@
 \usepackage{cite}
 
 \usepackage{graphicx}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  columns=fullflexible,
+  keepspaces=true,
+}
 
 \setminted{
 	breaklines,
