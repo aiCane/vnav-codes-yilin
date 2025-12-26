@@ -207,22 +207,58 @@ That is, the optimal solution is $P(t) = \frac{1}{4} t + \frac{9}{2} t^2 - \frac
 
 \textit{1.} Sol.
 
-Since we minimize the value of $snap$, and through Euler-Lagrange equation, we have the term of constant to be $2r-1 = 7$, where $r = 4$.
+We minimize the squared $r$-th derivative (snap, $r=4$). By the Euler--Lagrange equation, the optimal trajectory is a polynomial of degree $2r-1 = 7$ on each segment. For $k$ segments, the total number of unknown coefficients is $\mathbf{8k}$.
 
-Consider there are $k$ parts, so there will be totally $8k$ unknown numbers.
+\noindent Constraints:
 
-Waypoint constraints: There are a total of  points (including the start point, the end point, and $k-1$ intermediate points), resulting in $k+1$ waypoint constraints.
+Waypoint Constraints: These enforce the trajectory to pass through the given waypoints.
 
-Free derivative constraints: Each intermediate point requires 6 free derivative constraints, meaning continuity of velocity, acceleration, jerk, snap, crackle, and pop (i.e., continuity of derivatives from 1st to 6th order). Thus, there are $6(k-1)$ free derivative constraints.
+\begin{itemize}
+  \item Start point $t_0$: $x_1(t_0) = P_0$ (1 constraint).
+  \item End point $t_k$: $x_k(t_k) = P_k$ (1 constraint).
+  \item Each intermediate point $t_i$ ($i=1,\dots,k-1$) gives 2 constraints: $x_i(t_i) = P_i$ and $x_{i+1}(t_i) = P_i$.
+\end{itemize}
 
-Fixed derivative constraints: The remaining constraints are provided by fixed derivative constraints, totaling $k+5$. These can be assigned to the start and end points—for example, by fixing certain derivatives at the start and others at the end—so that the total number of fixed derivative constraints is $k+5$.
+Total waypoint constraints: $1 + 1 + 2(k-1) = \mathbf{2k}$.
+
+Free Derivative Constraints (Continuity): To ensure smoothness, at each intermediate point we require continuity of derivatives up to order $2r-2 = 6$ (i.e., velocity, acceleration, jerk, snap, crackle, pop). This gives $6$ constraints per intermediate point. Total free derivative constraints: $\mathbf{6(k-1)}$.
+
+Fixed Derivative Constraints: Boundary conditions at the start and end of the full trajectory. The total constraints must equal the total unknowns: $8k$. Currently we have $2k + 6(k-1) = 8k - 6$ constraints. Thus, we need $\mathbf{6}$ additional fixed derivative constraints (typically setting velocity, acceleration, and jerk to zero or specified values at both boundaries).
+
+That is:
+
+\begin{equation}
+\begin{cases}
+  \text{Waypoint constraints:} &\mathbf{2k}, \\
+  \text{Free derivative constraints:} &\mathbf{6(k-1)}, \\
+  \text{Fixed derivative constraints:} &\mathbf{6}.
+\end{cases}
+\end{equation}
 
 \textit{2.} Sol.
 
-Similarly, the waypoint constraints is still $k+1$. At the intermediate points (i.e., excluding the start and end points), we require the trajectory to connect smoothly. "Smooth" here means that the derivatives of order 1 through \(2r-2\) are equal on both sides of each intermediate point (position continuity is already ensured by the waypoint constraints). Each intermediate point contributes \(2r - 2\) constraints, and with \(k - 1\) intermediate points in total, there are \((2r - 2)(k - 1)\) free derivative constraints. The remaining constraints are provided by specifying derivatives at the start and end points. It can be shown through counting that \(2r + k - 3\) fixed derivative constraints are required. These can be flexibly allocated—for example, by assigning certain derivative values at the start point and others at the end point.
+Unknowns: Each segment is a polynomial of degree $2r-1$, so there are $2r$ coefficients per segment. Total unknowns: $\mathbf{2rk}$.
 
-That is,
+Waypoint Constraints: As above, each segment must match the prescribed start and end positions. Total: $\mathbf{2k}$.
+
+Free Derivative Constraints: At each intermediate point, continuity of derivatives from order $1$ to $2r-2$ is required. Each intermediate point contributes $2r-2$ constraints. With $k-1$ intermediate points, total: $\mathbf{(2r-2)(k-1)}$.
+
+Fixed Derivative Constraints: The remaining constraints needed to match the number of unknowns:
+
+\begin{align*}
+  \text{Fixed} &= 2rk - \bigl[2k + (2r-2)(k-1)\bigr] \\
+               &= 2rk - \bigl[2k + 2rk - 2k - 2r + 2\bigr] \\
+               &= \mathbf{2r - 2}.
+\end{align*}
+
+These are typically imposed as boundary conditions on derivatives at the start and end points.
+
+\noindent Summary for general $r$, $k$ segments:
 
 \begin{equation}
-  (k+1) + (2r-2)(k-1) + (2r+k-3) = 2rk.
+\begin{cases}
+  \text{Waypoint constraints:} &\mathbf{2k}, \\
+  \text{Free derivative constraints:} &\mathbf{(2r-2)(k-1)}, \\
+  \text{Fixed derivative constraints:} &\mathbf{2r-2}.
+\end{cases}
 \end{equation}
