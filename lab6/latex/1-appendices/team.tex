@@ -1,0 +1,45 @@
+\section{Team}
+
+\subsection*{Deliverable 3 - Initial Setup}
+
+Before we go to motion estimation, an important task is to calibrate the camera of the drone, i.e., to obtain the camera intrinsics and distortion coefficients. Normally you would need to calibrate the camera yourself offline to obtain the parameters.
+
+However, in this lab the camera that the drone is equipped with has been calibrated already, and calibration information is provided to you! (If you are curious about how to calibrate a camera, feel free to check this \href{http://wiki.ros.org/camera_calibration}{\ul{ROS package}})
+
+As part of the starter code, we provide a function \lstinline{calibrateKeypoints} to calibrate and undistort the keypoints. Make sure you use this function to calibrate the keypoints before passing them to RANSAC.
+
+\subsection*{Deliverable 4 - 2D-2D Correspondences}
+
+Given a set of keypoint correspondences in a pair of images (2D - 2D image correspondences), as computed in the previous lab 5, we can use 2-view (geometric verification) algorithms to estimate the relative pose (up to scale) from one viewpoint to another.
+
+To do so, we will be using three different algorithms and comparing their performance.
+
+We will first start with the 5-point algorithm of Nister. Then we will test the 8-point method we have seen in class. Finally, we will test the 2-point method you developed in Deliverable 2. For all techniques, we use the feature matching code we developed in Lab 5 (use the provided solution code for lab 5 if you prefer - download it \href{https://github.com/MIT-SPARK/VNAV-labs}{\ul{here}}). In particular, we use SIFT for feature matching in the remaining of this problem set.
+
+We provide you with a skeleton code in \lstinline{lab6} folder where we have set-up ROS callbacks to receive the necessary information.
+
+We ask you to complete the code inside the following functions:
+
+\begin{enumerate}
+  \item \textbf{\lstinline{cameraCallback}: this is the main function for this lab.}
+  \item \textbf{\lstinline{evaluateRPE}: evaluating the relative pose estimates}
+  \item \textbf{Publish your relative pose estimate}
+\end{enumerate}
+
+\subsection*{Deliverable 5 - 3D-3D Correspondences}
+
+The rosbag we provide you also contains depth values registered with the RGB camera, this means that each pixel location in the RGB camera has an associated depth value in the Depth image.
+
+In this part, we have provided code to scale to bearing vectors to 3D point clouds, and what you need to do is to use Arun’s algorithm (with RANSAC) to compute the drone’s relative pose from frame to frame.
+
+\begin{enumerate}
+  \item \textbf{\lstinline{cameraCallback}: mplement Arun’s algorithm}
+\end{enumerate}
+
+\subsubsection*{Performance Expectations}
+
+What levels of rotation and translation errors should one expect from using these different algorithms?
+
+\subsubsection*{Summary of Team Deliverables}
+
+For the given dataset, we require you to run \textbf{all algorithms} on it and compare their performances.
