@@ -1,1 +1,80 @@
 \section{Individual}
+
+\subsection*{Deliverable 1 - Nister’s 5-point Algorithm}
+
+\emph{Read the paper~\cite{nisternister2003} and answer the questions below}
+
+\lstinline{1} Outline the main computational steps required to get the relative pose estimate (up to scale) in Nister’s 5-point algorithm.
+
+\smallskip
+\noindent \emph{Sol.}
+
+Construct a \(5 \times 9\) matrix from the five point correspondences using the epipolar constraint and compute four vectors that span its nullspace (e.g., via QR factorisation). 
+
+Express the essential matrix as a linear combination of four basis matrices derived from the nullspace.
+
+Substitute this expression into the cubic constraints that characterize an essential matrix, leading to a system of nine equations. 
+
+Perform Gauss‑Jordan elimination to reduce the system, then form two \(4 \times 4\) polynomial matrices and compute their determinants to obtain a tenth‑degree polynomial. 
+
+Extract the real roots of this polynomial (e.g., using Sturm sequences or a companion matrix). 
+
+For each real root, recover the essential matrix, decompose it via singular value decomposition to obtain the rotation matrix $R$ and the translation vector $t$ (up to scale), and resolve the four‑fold ambiguity using the cheirality constraint with triangulation of one point.
+
+\bigskip
+
+\lstinline{2} Does the 5-point algorithm exhibit any degeneracy? (degeneracy = special arrangements of the 3D points or the camera poses under which the algorithm fails)
+
+\smallskip
+\noindent \emph{Sol.}
+
+In the calibrated setting, the algorithm does not fail completely under special configurations. For two views of a planar scene, there exists at most a two‑fold ambiguity in the solution for the essential matrix, which is generally resolved by incorporating a third view. The algorithm continues to operate correctly even with coplanar points, unlike uncalibrated methods that may fail or require model switching. Thus, while planar scenes introduce an ambiguity, the algorithm remains robust and does not exhibit a degeneracy that leads to failure.
+
+\bigskip
+
+\lstinline{3} When used within RANSAC, what is the expected number of iterations the 5-point algorithm requires to find an outlier-free set?
+
+{\small \color{gray} Hint: take same assumptions of the lecture notes}
+
+\smallskip
+\noindent \emph{Sol.}
+
+Let \(e\) be the outlier ratio among the point correspondences. The probability that a random sample of five points contains no outliers is \((1-e)^5\). Therefore, the expected number of RANSAC iterations required to obtain an outlier‑free sample is \(1 / (1-e)^5\).
+
+\subsection*{Deliverable 2 - Designing a Minimal Solver}
+\label{sub:deliverable_2_designing_a_minimal_solver}
+
+\emph{You are required to solve the following problems:}
+
+\lstinline{1} Assume the relative camera rotation between time and is known from the IMU. Design a minimal solver that computes the remaining degrees of freedom of the relative pose.
+
+{\small \color{gray} Hint: take same assumptions of the lecture notes}
+
+\smallskip
+\noindent \emph{Sol.}
+
+Given the relative rotation \(R\) from the IMU, the remaining unknowns are the translation direction \(\mathbf{t}\) (a 3-vector defined up to scale, hence 2 degrees of freedom). Each point correspondence \((\mathbf{q}_1, \mathbf{q}_2)\) in normalized image coordinates provides one linear constraint on \(\mathbf{t}\) via the epipolar equation:
+
+\begin{equation*}
+\mathbf{q}_2^\top [\mathbf{t}]_\times R \, \mathbf{q}_1 = 0.
+\end{equation*}
+
+Define \(\mathbf{u} = R \mathbf{q}_1\) and \(\mathbf{v} = \mathbf{q}_2\). The constraint simplifies to \(\mathbf{t} \cdot (\mathbf{u} \times \mathbf{v}) = 0\). With two point correspondences, we obtain two vectors \(\mathbf{a} = \mathbf{u}_1 \times \mathbf{v}_1\) and \(\mathbf{b} = \mathbf{u}_2 \times \mathbf{v}_2\) that are both orthogonal to \(\mathbf{t}\). Provided \(\mathbf{a}$ and $\mathbf{b}\) are linearly independent, \(\mathbf{t}\) is parallel to \(\mathbf{a} \times \mathbf{b}\). The minimal solver proceeds as follows:
+
+\begin{enumerate}
+  \item For each of the two point correspondences, compute \(\mathbf{u}_i = R \mathbf{q}_{1,i}\) and \(\mathbf{v}_i = \mathbf{q}_{2,i}\).
+  \item Compute \(\mathbf{a} = \mathbf{u}_1 \times \mathbf{v}_1\) and \(\mathbf{b} = \mathbf{u}_2 \times \mathbf{v}_2\).
+  \item If \(\mathbf{a}\) and \(\mathbf{b}\) are nearly collinear, the configuration is degenerate; discard the sample.
+  \item Otherwise, compute \(\mathbf{t} = \mathbf{a} \times \mathbf{b}\) and normalize to unit length.
+\end{enumerate}
+
+The translation direction \(\mathbf{t}\) is recovered up to a sign ambiguity, which can be resolved later by cheirality checks using additional points.
+
+\bigskip
+
+\lstinline{2} \emph{OPTIONAL}~\ref{sub:can_you_do_better_than_nister_}: Describe the pseudo-code of a RANSAC algorithm using the minimal solver developed in point a) to compute the relative pose in presence of outliers (wrong correspondences).
+
+\smallskip
+\noindent \emph{Sol.}
+
+The pseudo-code in appendix~\ref{sub:ransac_algorithm} outlines a RANSAC scheme that uses the above minimal solver to estimate the translation direction in the presence of outliers. This RANSAC procedure efficiently rejects outliers while exploiting the known rotation to reduce the minimal sample size to two points, thereby decreasing the required number of iterations compared to the standard five-point algorithm.

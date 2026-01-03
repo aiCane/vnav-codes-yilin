@@ -1,36 +1,8 @@
 \section{Individual}
 
-\subsection*{Deliverable 1 - Nister’s 5-point Algorithm}
+\subsection*{Can you do better than Nister?}
+\label{sub:can_you_do_better_than_nister_}
 
-\subsubsection*{Read the paper and answer the questions below}
-
-Read the following paper.
-
-[1] Nistér, David. ``An efficient solution to the five-point relative pose problem.'' 2003 IEEE Computer Society Conference on Computer Vision and Pattern Recognition, 2003. Vol. 2. 2003. \href{http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.86.8769&rep=rep1&type=pdf}{\ul{link here}}.
-
-Questions:
-
-\begin{enumerate}
-  \item Outline the main computational steps required to get the relative pose estimate (up to scale) in Nister’s 5-point algorithm.
-  \item Does the 5-point algorithm exhibit any degeneracy? (degeneracy = special arrangements of the 3D points or the camera poses under which the algorithm fails)
-  \item When used within RANSAC, what is the expected number of iterations the 5-point algorithm requires to find an outlier-free set?
-
-  {\small \color{gray} Hint: take same assumptions of the lecture notes}
-\end{enumerate}
-
-\subsection*{Deliverable 2 - Designing a Minimal Solver}
-
-\textbf{Can you do better than Nister?} Nister’s method is a minimal solver since it uses 5 point correspondences to compute the 5 degrees of freedom that define the relative pose (up to scale) between the two cameras (recall: each point induces a scalar equation). In the presence of external information (e.g., data from other sensors), we may be able use less point correspondences to compute the relative pose.
+Nister’s method is a minimal solver since it uses 5 point correspondences to compute the 5 degrees of freedom that define the relative pose (up to scale) between the two cameras (recall: each point induces a scalar equation). In the presence of external information (e.g., data from other sensors), we may be able use less point correspondences to compute the relative pose.
 
 Consider a drone flying in an unknown environment, and equipped with a camera and an Inertial Measurement Unit (IMU). We want to use the feature correspondences extracted in the images captured at two consecutive time instants \(t_1\) and \(t_2\) to estimate the relative pose (up to scale) between the pose at time \(t_1\) and the pose at time \(t_2\). Besides the camera, we can use the IMU (and in particular the gyroscopes in the IMU) to estimate the relative rotation between the pose of the camera at time \(t_1\) and \(t_2\).
-
-You are required to solve the following problems:
-
-\begin{enumerate}
-  \item Assume the relative camera rotation between time and is known from the IMU. Design a minimal solver that computes the remaining degrees of freedom of the relative pose.
-
-  {\small \color{gray} Hint: take same assumptions of the lecture notes}
-
-  \item \textbf{OPTIONAL}: Describe the pseudo-code of a RANSAC algorithm using the minimal solver developed in point a) to compute the relative pose in presence of outliers (wrong correspondences).
-\end{enumerate}
-

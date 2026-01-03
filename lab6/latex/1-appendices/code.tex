@@ -1,0 +1,52 @@
+\section{Source Code}
+
+\subsection{RANSAC Algorithm}
+\label{sub:ransac_algorithm}
+
+The pseudo-code answered question in section~\ref{sub:deliverable_2_designing_a_minimal_solver}.
+
+\begin{minted}{text}
+Input:
+  - Set of point correspondences {(q1_i, q2_i)} (normalized coordinates)
+  - Known rotation matrix R
+  - Error threshold eps
+  - Number of iterations N
+
+Output:
+  - Best estimate of translation direction t
+
+Procedure:
+  best_t = None
+  best_inlier_count = 0
+
+  for iteration = 1 to N:
+    // 1. Randomly sample 2 correspondences
+    sample = random_sample(correspondences, size=2)
+    // 2. Compute translation direction using the minimal solver
+    a = (R * sample[0].q1) x sample[0].q2
+    b = (R * sample[1].q1) x sample[1].q2
+    if norm(a x b) < small_value:   // degenerate case
+      continue
+    t_candidate = normalize(a x b)
+    // 3. Form essential matrix E = [t_candidate]_x * R
+    E = skew(t_candidate) * R
+    // 4. Evaluate model on all correspondences
+    inlier_count = 0
+    for each correspondence (q1, q2):
+      error = |q2^T * E * q1|   // or symmetrized epipolar distance
+      if error < eps:
+        inlier_count += 1
+    // 5. Update best model
+    if inlier_count > best_inlier_count:
+      best_inlier_count = inlier_count
+      best_t = t_candidate
+
+  // (Optional) Refine using all inliers
+  if best_t is not None:
+    Gather all inliers according to best_t and E
+    Solve for t by minimizing ||A t|| subject to ||t||=1, 
+        where each row of A is ( (R*q1) x q2 )^T
+    Update best_t with the refined direction
+
+  return best_t
+\end{minted}
