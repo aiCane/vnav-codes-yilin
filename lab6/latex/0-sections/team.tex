@@ -4,38 +4,7 @@
 
 This part deals with camera calibration for the drone, specifically obtaining the intrinsic matrix and distortion coefficients. The goal is to transform detected pixel coordinates into undistorted 3D bearing vectors that can be used for geometric vision tasks.
 
-The implementation resides in the function \lstinline{calibrateKeypoints}. It takes two sets of 2D keypoints and converts them into normalized bearing vectors using the camera parameters. Here’s what the code does:
-
-\begin{minted}{cpp}
-void calibrateKeypoints(
-  const std::vector<cv::Point2f>& pts1,
-  const std::vector<cv::Point2f>& pts2,
-  opengv::bearingVectors_t& bearing_vector_1,
-  opengv::bearingVectors_t& bearing_vector_2
-) {
-  std::vector<cv::Point2f> points1_rect, points2_rect;
-  cv::undistortPoints(
-    pts1, points1_rect,
-    camera_params_.K, camera_params_.D
-  );
-  cv::undistortPoints(
-    pts2, points2_rect,
-    camera_params_.K, camera_params_.D
-  );
-
-  for (auto const& pt: points1_rect){
-    opengv::bearingVector_t bearing_vector(pt.x, pt.y, 1);
-    bearing_vector_1.push_back(bearing_vector.normalized());
-  }
-
-  for (auto const& pt: points2_rect){
-    opengv::bearingVector_t bearing_vector(pt.x, pt.y, 1);
-    bearing_vector_2.push_back(bearing_vector.normalized());
-  }
-}
-\end{minted}
-
-After undistorting the points with \lstinline{cv::undistortPoints}, each corrected 2D point $(x, y)$ is lifted to a 3D direction vector $(x, y, 1)$. Since the intrinsic matrix has already been accounted for during undistortion, the effective focal length becomes 1, and the resulting vectors are normalized to unit length.
+The implementation resides in the function \lstinline{calibrateKeypoints}. It takes two sets of 2D keypoints and converts them into normalized bearing vectors using the camera parameters. The method source is in appendix~\ref{sub:calibratekeypoints}. After undistorting the points with \lstinline{cv::undistortPoints}, each corrected 2D point $(x, y)$ is lifted to a 3D direction vector $(x, y, 1)$. Since the intrinsic matrix has already been accounted for during undistortion, the effective focal length becomes 1, and the resulting vectors are normalized to unit length.
 
 This function is called inside \lstinline{cameraCallback} with a single line:
 
@@ -57,5 +26,49 @@ Adapter adapter_mono(
 
 This prepares the data for the RANSAC-based relative pose estimation that follows.
 
+\subsection*{Deliverable 4 - 2D-2D Correspondences}
 
+We implemented and evaluated three geometric algorithms for estimating the relative camera motion between consecutive frames using 2D–2D feature matches.
+
+\subsubsection*{Experimental Methodology}
+
+Feature correspondences were obtained using the SIFT-based tracker from Lab 5. Since all geometric solvers assume a calibrated pinhole camera, raw pixel coordinates were first undistorted using the known intrinsic matrix $K$ and distortion coefficients $D$, then converted into normalized bearing vectors via the \lstinline{calibrateKeypoints} function.
+
+Three pose estimation methods from the OpenGV library were tested. \emph{Nistér’s 5-point algorithm} is a minimal solver for the essential matrix, \emph{Longuet-Higgins’ 8-point algorithm} is a linear least-squares solver, and \emph{2-point algorithm (known rotation)} estimates translation direction only, assuming exact relative rotation—here supplied by ground-truth odometry to mimic a high-precision IMU.
+
+Because monocular vision yields pose estimates up to an unknown scale, the estimated translation vector was normalized and rescaled using the magnitude of the ground-truth translation (via \lstinline{scaleTranslation}) to enable meaningful trajectory visualization in RViz.
+
+\subsubsection*{Implementation Details}
+
+The core logic resides in \lstinline{cameraCallback}. Before invoking any solver, we ensured a sufficient number of tracked features were available. Keypoints were undistorted using \lstinline{cv::undistortPoints} to map them onto the normalized image plane.
+
+Robust estimation was performed using \lstinline{opengv::sac::Ransac}:
+
+For the 5-point and 8-point methods, we used \lstinline{CentralRelativePoseSacProblem}.
+
+For the 2-point method, relative rotation was computed from ground-truth poses (\(R_{\text{GT}} = R_{\text{prev}}^\top R_{\text{curr}}\)), and \lstinline{TranslationOnlySacProblem} was used to estimate translation direction only.
+
+A new boolean parameter \lstinline{use_ransac} and an integer parameter \lstinline{pose_estimator} were added The system is run as fig.~\ref{fig:2d_ransac}
+
+\begin{minted}{console}
+roslaunch lab_6 video_tracking.launch pose_estimator:=0 use_ransac:=True
+\end{minted}
+
+\subsubsection*{Performance Evaluation}
+
+\paragraph{Impact of RANSAC}
+We compared the 5-point algorithm with and without RANSAC to assess the effect of outlier rejection. Results (Fig.~\ref{fig:rpe_comparison}) show:
+
+\emph{Without RANSAC}: large, erratic spikes in both rotation (often exceeding 10°) and translation error, confirming that even a few mismatched features severely degrade minimal solvers.
+
+\emph{With RANSAC}: errors remain low and stable—rotation under 2°, and bounded translation direction error—demonstrating RANSAC’s effectiveness in filtering outliers.
+
+\paragraph{Algorithm Comparison}
+Fig.~\ref{fig:algorithm_comparison} compares all three RANSAC-enabled methods:
+
+\emph{Rotation error}: The 2-point method shows near-zero error by design (ground-truth rotation was provided). The 5-point and 8-point methods perform similarly (typically < 3°), with the 5-point method slightly more stable due to its nonlinear essential matrix constraints.
+
+\emph{Translation error}: All methods fluctuate, especially in low-parallax or planar segments—common challenges in monocular VO. The 2-point method maintains the lowest baseline error, confirming that known rotation improves translation estimation, though it remains sensitive to feature noise.
+
+These results illustrate the trade-offs between algorithmic assumptions, available sensor data, and real-world robustness in visual odometry.
 

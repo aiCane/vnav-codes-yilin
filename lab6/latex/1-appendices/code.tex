@@ -50,3 +50,30 @@ Procedure:
 
   return best_t
 \end{minted}
+
+\subsection{calibrateKeypoints}
+\label{sub:calibratekeypoints}
+
+\begin{minted}{cpp}
+void calibrateKeypoints(
+  const std::vector<cv::Point2f>& pts1,
+  const std::vector<cv::Point2f>& pts2,
+  opengv::bearingVectors_t& bearing_vector_1,
+  opengv::bearingVectors_t& bearing_vector_2
+) {
+  std::vector<cv::Point2f> points1_rect, points2_rect;
+  cv::undistortPoints(pts1, points1_rect,camera_params_.K, camera_params_.D);
+  cv::undistortPoints(pts2, points2_rect,camera_params_.K, camera_params_.D);
+
+  for (auto const& pt: points1_rect){
+    opengv::bearingVector_t bearing_vector(pt.x, pt.y, 1);
+    bearing_vector_1.push_back(bearing_vector.normalized());
+  }
+
+  for (auto const& pt: points2_rect){
+    opengv::bearingVector_t bearing_vector(pt.x, pt.y, 1);
+    bearing_vector_2.push_back(bearing_vector.normalized());
+  }
+}
+\end{minted}
+
