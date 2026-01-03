@@ -8,8 +8,9 @@
 \usepackage{amssymb}
 \usepackage{empheq}
 
-% Using package subcaption with in IEEEtran class may cause the warning below, just ignore it.
-% Unknown document class (or package), standard defaults will be used
+% Using package subcaption within IEEEtran may cause the warning below, just ignore it.
+% caption.sty: Unknown document class (or package), standard defaults will be used
+\usepackage{subcaption}
 
 \usepackage{hyperref}
 \usepackage{cite}
@@ -60,5 +61,9 @@
 
 \input{1-appendices/individual}
 \input{1-appendices/team}
+
+\clearpage
+\onecolumn
+\input{1-appendices/code}
 
 \end{document}

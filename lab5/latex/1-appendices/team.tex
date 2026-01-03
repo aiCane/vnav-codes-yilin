@@ -103,6 +103,7 @@ For now, let us just use a blackbox function which, given the keypoints correspo
 The most common algorithms for feature matching use different detection, description, and matching techniques. We’ll now try different techniques and see how they compare against one another:
 
 \subsubsection{Pair of frames}
+\label{ssub:a_pair_of_frames}
 
 Fill the previous table with results for other feature tracking algorithms. We ask that you complete the table using the following additional algorithms:
 
@@ -120,7 +121,62 @@ By now, you should have four algorithms, with their pros and cons, capable of tr
 
 {\small \color{gray} Hint: It is normal for some descriptors to perform worse than others, especially on this pair of images – in fact, some may do very poorly, so don’t worry if you observe this.}
 
+\textbf{We got the terminal logs to be}:
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 603
+Avg. Keypoints 2 Size: 969
+Avg. Number of matches: 603
+Avg. Number of good matches: 98
+Avg. Number of Inliers: 77
+Avg. Inliers ratio: 0.785714
+Num. of samples: 1
+```,
+caption: [SIFT output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 997
+Avg. Keypoints 2 Size: 1822
+Avg. Number of matches: 997
+Avg. Number of good matches: 135
+Avg. Number of Inliers: 90
+Avg. Inliers ratio: 0.666667
+Num. of samples: 1
+\end{minted}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 500
+Avg. Keypoints 2 Size: 500
+Avg. Number of matches: 500
+Avg. Number of good matches: 8
+Avg. Number of Inliers: 7
+Avg. Inliers ratio: 0.875
+Num. of samples: 1
+```,
+caption: [ORB output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 2266
+Avg. Keypoints 2 Size: 3653
+Avg. Number of matches: 2266
+Avg. Number of good matches: 41
+Avg. Number of Inliers: 17
+Avg. Inliers ratio: 0.414634
+Num. of samples: 1
+```,
+caption: [FAST+BRIEF output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
 \subsubsection{Real Datasets}
+\label{ssub:a_real_datasets}
 
 Let us now use an actual video sequence to track features from frame to frame and push these algorithms to their limit!
 
@@ -148,6 +204,64 @@ You will need to first specify in the launch file the path to your downloaded da
 
 {\small \color{gray} Hint: You may need to change your plotting code in \lstinline{FeatureTracker::trackFeatures} to call \lstinline{cv::waitKey(10)} instead of \lstinline{cv::waitKey(0)} after imshow in order to get the video to play continuously instead of frame-by-frame on every keypress.}
 
+\textbf{The logs of Real Datasets are}:
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 321.819
+Avg. Keypoints 2 Size: 321.602
+Avg. Number of matches: 321.819
+Avg. Number of good matches: 160.974
+Avg. Number of Inliers: 149.751
+Avg. Inliers ratio: 0.928412
+Num. of samples: 425
+```,
+caption: [SIFT output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 389.408
+Avg. Keypoints 2 Size: 389.252
+Avg. Number of matches: 389.408
+Avg. Number of good matches: 234.594
+Avg. Number of Inliers: 216.93
+Avg. Inliers ratio: 0.926189
+Num. of samples: 488
+```,
+caption: [SURF output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 268.751
+Avg. Keypoints 2 Size: 268.612
+Avg. Number of matches: 268.751
+Avg. Number of good matches: 166.031
+Avg. Number of Inliers: 160.54
+Avg. Inliers ratio: 0.964453
+Num. of samples: 541
+```,
+caption: [ORB output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 741.136
+Avg. Keypoints 2 Size: 741.256
+Avg. Number of matches: 741.136
+Avg. Number of good matches: 499.004
+Avg. Number of Inliers: 465.635
+Avg. Inliers ratio: 0.928044
+Num. of samples: 477
+```,
+caption: [FAST+BRIEF output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
 Finally, we ask you to summarize your results in one table for each dataset and asnwer some questions:
 
 \begin{itemize}
@@ -171,6 +285,62 @@ Finally, we ask you to summarize your results in one table for each dataset and 
     What applications are they each best suited for? (e.g. when does speed vs quality matter)
   }
 \end{itemize}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 137.468
+Avg. Keypoints 2 Size: 136.608
+Avg. Number of matches: 137.468
+Avg. Number of good matches: 67.9915
+Avg. Number of Inliers: 50.8766
+Avg. Inliers ratio: 0.75093
+Num. of samples: 235
+```,
+caption: [SIFT output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 1009.98
+Avg. Keypoints 2 Size: 1006.7
+Avg. Number of matches: 1009.98
+Avg. Number of good matches: 457.648
+Avg. Number of Inliers: 345.381
+Avg. Inliers ratio: 0.778896
+Num. of samples: 310
+```,
+caption: [SURF output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 258.294
+Avg. Keypoints 2 Size: 257.972
+Avg. Number of matches: 258.294
+Avg. Number of good matches: 133.933
+Avg. Number of Inliers: 116.456
+Avg. Inliers ratio: 0.878598
+Num. of samples: 465
+```,
+caption: [ORB output],
+kind: "code",
+supplement: [Log],
+\end{minted}
+
+\begin{minted}{text}
+Avg. Keypoints 1 Size: 524.664
+Avg. Keypoints 2 Size: 523.742
+Avg. Number of matches: 524.664
+Avg. Number of good matches: 313.428
+Avg. Number of Inliers: 273.366
+Avg. Inliers ratio: 0.877645
+Num. of samples: 465
+```,
+caption: [FAST+BRIEF output],
+kind: "code",
+supplement: [Log],
+\end{minted}
 
 \subsection{Deliverable - Feature Tracking: Lucas Kanade Tracker}
 
