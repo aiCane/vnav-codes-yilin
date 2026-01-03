@@ -1,0 +1,707 @@
+\section{Source Code}
+
+\subsection*{sift\_feature\_tracker.cpp}
+\label{sub:sift_feature_tracker_cpp}
+
+\begin{minted}{cpp}
+#include "sift_feature_tracker.h"
+
+#include <vector>
+#include <glog/logging.h>
+#include <opencv2/features2d.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/calib3d.hpp>
+
+using namespace cv;
+using namespace cv::xfeatures2d;
+
+/**
+   Sift feature tracker Constructor.
+*/
+SiftFeatureTracker::SiftFeatureTracker()
+  : FeatureTracker(),
+    detector(SIFT::create()) {}
+
+/** This function detects keypoints in an image.
+    @param[in] img Image input where to detect keypoints.
+    @param[out] keypoints List of keypoints detected on the given image.
+*/
+void SiftFeatureTracker::detectKeypoints(
+  const cv::Mat& img,
+  std::vector<KeyPoint>* keypoints
+) const {
+  CHECK_NOTNULL(keypoints);
+  
+  detector->detect(img, *keypoints);
+}
+
+/** This function describes keypoints in an image.
+    @param[in] img Image used to detect the keypoints.
+    @param[in, out] keypoints List of keypoints detected on the image. Depending
+    on the detector used, some keypoints might be added or removed.
+    @param[out] descriptors List of descriptors for the given keypoints.
+*/
+void SiftFeatureTracker::describeKeypoints(
+  const cv::Mat& img,
+  std::vector<KeyPoint>* keypoints,
+  cv::Mat* descriptors
+) const {
+  CHECK_NOTNULL(keypoints);
+  CHECK_NOTNULL(descriptors);
+
+  detector->compute(img, *keypoints, *descriptors);
+}
+
+/** This function matches descriptors.
+    @param[in] descriptors_1 First list of descriptors.
+    @param[in] descriptors_2 Second list of descriptors.
+    @param[out] matches List of k best matches between descriptors.
+    @param[out] good_matches List of descriptors classified as "good"
+*/
+void SiftFeatureTracker::matchDescriptors(
+  const cv::Mat& descriptors_1,
+  const cv::Mat& descriptors_2,
+  std::vector<std::vector<DMatch>>* matches,
+  std::vector<cv::DMatch>* good_matches
+) const {
+  CHECK_NOTNULL(matches);
+  FlannBasedMatcher flann_matcher;
+
+  flann_matcher.knnMatch(descriptors_1, descriptors_2, *matches, 2);
+
+  const float ratio_thresh = 0.8f;
+  for (size_t i = 0; i < matches->size(); i++) {
+    if ((*matches)[i].size() >= 2) {
+      if((*matches)[i][0].distance < ratio_thresh * (*matches)[i][1].distance) {
+        good_matches->push_back((*matches)[i][0]);
+      }
+    }
+  }
+}
+\end{minted}
+
+\subsection*{feature\_tracker.cpp}
+\begin{minted}{cpp}
+#include "feature_tracker.h"
+
+#include <vector>
+#include <numeric>
+
+#include <gflags/gflags.h>
+#include <glog/logging.h>
+
+#include <opencv2/features2d.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/calib3d.hpp>
+
+#include <ros/ros.h>
+
+using namespace cv;
+using namespace cv::xfeatures2d;
+
+/** This is the main tracking function, given two images, it detects,
+ * describes and matches features.
+ * We will be modifying this function incrementally to plot different figures
+ * and compute different statistics.
+ @param[in] img_1, img_2 Images where to track features.
+ @param[out] matched_kp_1_kp_2 pair of vectors of keypoints with the same size
+ so that matched_kp_1_kp_2.first[i] matches with matched_kp_1_kp_2.second[i].
+*/
+void FeatureTracker::trackFeatures(
+  const cv::Mat &img_1,
+  const cv::Mat &img_2,
+  std::pair<std::vector<cv::KeyPoint>,
+  std::vector<cv::KeyPoint>> *matched_kp_1_kp_2
+) {
+
+  std::vector<KeyPoint> keypoints_1, keypoints_2;
+
+  detectKeypoints(img_1, &keypoints_1);
+  detectKeypoints(img_2, &keypoints_2);
+  
+  cv::Mat img_1_kp, img_2_kp;
+
+  cv::drawKeypoints(img_1, keypoints_1, img_1_kp, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+  cv::drawKeypoints(img_2, keypoints_2, img_2_kp, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+  
+  cv::imwrite("sift_keypoints_1.png", img_1_kp);
+  cv::imwrite("sift_keypoints_2.png", img_2_kp);
+
+  cv::imshow("Keypoints Image 1", img_1_kp);
+  cv::imshow("Keypoints Image 2", img_2_kp);
+  cv::waitKey(50);
+  
+  cv::Mat descriptors_1, descriptors_2;
+  describeKeypoints(img_1, &keypoints_1, &descriptors_1);
+  describeKeypoints(img_2, &keypoints_2, &descriptors_2);
+  
+  std::vector<std::vector<DMatch>> matches;
+  std::vector<DMatch> good_matches;
+  
+  if (!descriptors_1.empty() && !descriptors_2.empty()) {
+      matchDescriptors(descriptors_1, descriptors_2, &matches, &good_matches);
+  }
+  
+  cv::Mat img_matches;
+  cv::drawMatches(
+    img_1, keypoints_1, img_2, keypoints_2, good_matches, img_matches, 
+    cv::Scalar::all(-1), cv::Scalar::all(-1), std::vector<char>(), 
+    cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS
+  );
+  cv::imwrite("sift_matches.png", img_matches);
+  cv::imshow("Matches", img_matches);
+  cv::waitKey(0);
+
+  std::vector<cv::KeyPoint> good_kp1, good_kp2;
+  for(const auto& m : good_matches) {
+    good_kp1.push_back(keypoints_1[m.queryIdx]);
+    good_kp2.push_back(keypoints_2[m.trainIdx]);
+  }
+  
+  std::vector<uchar> inlier_mask;
+  if (good_matches.size() >= 8) { 
+    inlierMaskComputation(good_kp1, good_kp2, &inlier_mask);
+  } else {
+    inlier_mask.resize(good_matches.size(), 0);
+  }
+  
+  unsigned int num_inliers = 0;
+  for(auto mask_val : inlier_mask) {
+    if(mask_val) num_inliers++;
+  }
+  
+  cv::Mat img_inliers;
+  
+  std::vector<char> mask_char(inlier_mask.begin(), inlier_mask.end());
+  
+  cv::drawMatches(
+    img_1, keypoints_1, img_2, keypoints_2, good_matches, img_inliers,
+    cv::Scalar(0, 255, 0),
+    cv::Scalar(0, 0, 255),
+    mask_char,
+    cv::DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS
+  );
+                  
+  cv::imwrite("sift_inliers.png", img_inliers);
+  cv::imshow("Inliers", img_inliers);
+  cv::waitKey(50);
+  
+  float const new_num_samples = static_cast<float>(num_samples_) + 1.0f;
+  float const old_num_samples = static_cast<float>(num_samples_);
+  avg_num_keypoints_img1_ = (avg_num_keypoints_img1_ * old_num_samples + static_cast<float>(keypoints_1.size())) / new_num_samples;
+  avg_num_keypoints_img2_ = (avg_num_keypoints_img2_ * old_num_samples + static_cast<float>(keypoints_2.size())) / new_num_samples;
+  avg_num_matches_ = (avg_num_matches_ * old_num_samples + static_cast<float>(matches.size())) / new_num_samples;
+  avg_num_good_matches_ = (avg_num_good_matches_ * old_num_samples + static_cast<float>(good_matches.size())) / new_num_samples;
+  avg_num_inliers_ = (avg_num_inliers_ * old_num_samples + static_cast<float>(num_inliers)) / new_num_samples;
+  avg_inlier_ratio_ =
+      (avg_inlier_ratio_ * old_num_samples + (static_cast<float>(num_inliers) / static_cast<float>(good_matches.size()))) / new_num_samples;
+  ++num_samples_;
+}
+
+/** Compute Inlier Mask out of the given matched keypoints.
+   *  Both keypoints_1 and keypoints_2 input parameters must be ordered by match
+   * i.e. keypoints_1[0] has been matched to keypoints_2[0].
+   * Therefore, both keypoints vectors must have the same length.
+    @param[in] keypoints_1 List of keypoints detected on the first image.
+    @param[in] keypoints_2 List of keypoints detected on the second image.
+    @param[out] inlier_mask Mask indicating inliers (1) from outliers (0).
+  */
+void FeatureTracker::inlierMaskComputation(
+  const std::vector<KeyPoint> &keypoints_1,
+  const std::vector<KeyPoint> &keypoints_2,
+  std::vector<uchar> *inlier_mask
+) const {
+  CHECK_NOTNULL(inlier_mask);
+  const size_t size = keypoints_1.size();
+  CHECK_EQ(keypoints_2.size(), size) << "Size of keypoint vectors "
+                                        "should be the same!";
+
+  std::vector<Point2f> pts1(size);
+  std::vector<Point2f> pts2(size);
+  for (size_t i = 0; i < keypoints_1.size(); i++) {
+    pts1[i] = keypoints_1[i].pt;
+    pts2[i] = keypoints_2[i].pt;
+  }
+
+  static constexpr double max_dist_from_epi_line_in_px = 3.0;
+  static constexpr double confidence_prob = 0.99;
+  try {
+    findFundamentalMat(pts1, pts2, CV_FM_RANSAC, max_dist_from_epi_line_in_px, confidence_prob, *inlier_mask);
+  } catch (...) {
+    ROS_WARN("Inlier Mask could not be computed, this can happen if there"
+             "are not enough features tracked.");
+  }
+}
+
+/** Example of function to draw matches. Feel free to re-use this example or
+ *  create your own. You will need to modify it in order to plot the different
+ *  figures. You can add more functions to this class if needed.
+ */
+void FeatureTracker::drawMatches(
+  const cv::Mat &img_1,
+  const cv::Mat &img_2,
+  const std::vector<KeyPoint> &keypoints_1,
+  const std::vector<KeyPoint> &keypoints_2,
+  const std::vector<std::vector<DMatch>> &matches
+) {
+  cv::namedWindow("tracked_features", cv::WINDOW_NORMAL);
+  cv::Mat img_matches;
+  cv::drawMatches(
+    img_1,
+    keypoints_1,
+    img_2,
+    keypoints_2,
+    matches,
+    img_matches,
+    Scalar::all(-1),
+    Scalar::all(-1),
+    std::vector<std::vector<char>>(),
+    DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS
+  );
+
+  imshow("tracked_features", img_matches);
+  
+  while (ros::ok() && waitKey(10) == -1) {}
+}
+
+void FeatureTracker::printStats() const {
+  std::cout << "Avg. Keypoints 1 Size: " << avg_num_keypoints_img1_ << std::endl;
+  std::cout << "Avg. Keypoints 2 Size: " << avg_num_keypoints_img2_ << std::endl;
+  std::cout << "Avg. Number of matches: " << avg_num_matches_ << std::endl;
+  std::cout << "Avg. Number of good matches: " << avg_num_good_matches_ << std::endl;
+  std::cout << "Avg. Number of Inliers: " << avg_num_inliers_ << std::endl;
+  std::cout << "Avg. Inliers ratio: " << avg_inlier_ratio_ << std::endl;
+  std::cout << "Num. of samples: " << num_samples_ << std::endl;
+}
+\end{minted}
+
+\subsection*{surf\_feature\_tracker.cpp}
+
+\begin{minted}{cpp}
+#include "surf_feature_tracker.h"
+
+#include <vector>
+#include <glog/logging.h>
+#include <opencv2/features2d.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/calib3d.hpp>
+
+using namespace cv;
+using namespace cv::xfeatures2d;
+
+/**
+   Surf feature tracker Constructor.
+*/
+SurfFeatureTracker::SurfFeatureTracker()
+  : FeatureTracker(),
+    detector(SURF::create()) {
+
+}
+
+/** This function detects keypoints in an image.
+    @param[in] img Image input where to detect keypoints.
+    @param[out] keypoints List of keypoints detected on the given image.
+*/
+void SurfFeatureTracker::detectKeypoints(
+  const cv::Mat& img,
+  std::vector<KeyPoint>* keypoints
+) const {
+  CHECK_NOTNULL(keypoints);
+
+  detector->detect(img, *keypoints);
+}
+
+/** This function describes keypoints in an image.
+    @param[in] img Image used to detect the keypoints.
+    @param[in, out] keypoints List of keypoints detected on the image. Depending
+    on the detector used some keypoints might be added or removed.
+    @param[out] descriptors List of descriptors for the given keypoints.
+*/
+void SurfFeatureTracker::describeKeypoints(
+  const cv::Mat& img,
+  std::vector<KeyPoint>* keypoints,
+  cv::Mat* descriptors
+) const {
+  CHECK_NOTNULL(keypoints);
+  CHECK_NOTNULL(descriptors);
+  
+  detector->compute(img, *keypoints, *descriptors)
+}
+
+/** This function matches descriptors.
+    @param[in] descriptors_1 First list of descriptors.
+    @param[in] descriptors_2 Second list of descriptors.
+    @param[out] matches List of k best matches between descriptors.
+    @param[out] good_matches List of descriptors classified as "good"
+*/
+void SurfFeatureTracker::matchDescriptors(
+  const cv::Mat& descriptors_1,
+  const cv::Mat& descriptors_2,
+  std::vector<std::vector<DMatch>>* matches,
+  std::vector<cv::DMatch>* good_matches
+) const {
+  CHECK_NOTNULL(matches);
+
+  FlannBasedMatcher flann_matcher;
+  // 1. KNN Match (k=2)
+  if (!descriptors_1.empty() && !descriptors_2.empty()) {
+    flann_matcher.knnMatch(descriptors_1, descriptors_2, *matches, 2);
+  }
+
+  // 2. Lowe's Ratio Test
+  const float ratio_thresh = 0.8f;
+  for (size_t i = 0; i < matches->size(); i++) {
+    if ((*matches)[i].size() >= 2) {
+      if ((*matches)[i][0].distance < ratio_thresh * (*matches)[i][1].distance) {
+        good_matches->push_back((*matches)[i][0]);
+      }
+    }
+  }
+}
+\end{minted}
+
+\subsection*{orb\_feature\_tracker.cpp}
+
+\begin{minted}{cpp}
+#include "orb_feature_tracker.h"
+#include <opencv2/features2d.hpp>
+
+using namespace cv;
+using namespace cv::xfeatures2d;
+
+OrbFeatureTracker::OrbFeatureTracker()
+    : detector(ORB::create(500, 1.2f, 1)) {}
+
+void OrbFeatureTracker::detectKeypoints(
+  const cv::Mat &img,
+  std::vector<cv::KeyPoint> *keypoints
+) const {
+  detector->detect(img, *keypoints);
+}
+
+void OrbFeatureTracker::describeKeypoints(
+  const cv::Mat &img,
+  std::vector<cv::KeyPoint> *keypoints,
+  cv::Mat *descriptors
+) const {
+  detector->compute(img, *keypoints, *descriptors);
+}
+
+void OrbFeatureTracker::matchDescriptors(
+  const cv::Mat &descriptors_1,
+  const cv::Mat &descriptors_2,
+  std::vector<std::vector<cv::DMatch>> *matches,
+  std::vector<cv::DMatch> *good_matches
+) const {
+  cv::BFMatcher matcher(cv::NORM_HAMMING);
+  
+  if (!descriptors_1.empty() && !descriptors_2.empty()) {
+    matcher.knnMatch(descriptors_1, descriptors_2, *matches, 2);
+  }
+
+  // Ratio Test
+  const float ratio_thresh = 0.8f;
+  for (size_t i = 0; i < matches->size(); i++) {
+    if ((*matches)[i].size() >= 2) {
+      if ((*matches)[i][0].distance < ratio_thresh * (*matches)[i][1].distance) {
+        good_matches->push_back((*matches)[i][0]);
+      }
+    }
+  }
+}
+\end{minted}
+
+\subsection*{fast\_feature\_tracker.cpp}
+
+\begin{minted}{cpp}
+#include "fast_feature_tracker.h"
+#include <opencv2/features2d.hpp>
+
+#include <opencv2/xfeatures2d.hpp>
+
+using namespace cv;
+using namespace cv::xfeatures2d;
+
+FastFeatureTracker::FastFeatureTracker()
+  : detector(FastFeatureDetector::create()) {}
+
+void FastFeatureTracker::detectKeypoints(
+  const cv::Mat &img,
+  std::vector<cv::KeyPoint> *keypoints
+) const {
+  detector->detect(img, *keypoints);
+}
+
+void FastFeatureTracker::describeKeypoints(
+  const cv::Mat &img,
+  std::vector<cv::KeyPoint> *keypoints,
+  cv::Mat *descriptors
+) const {
+  Ptr<BriefDescriptorExtractor> extractor = BriefDescriptorExtractor::create();
+  extractor->compute(img, *keypoints, *descriptors);
+}
+
+void FastFeatureTracker::matchDescriptors(
+  const cv::Mat &descriptors_1,
+  const cv::Mat &descriptors_2,
+  std::vector<std::vector<cv::DMatch>> *matches,
+  std::vector<cv::DMatch> *good_matches
+) const {
+  cv::BFMatcher matcher(cv::NORM_HAMMING);
+  
+  if (!descriptors_1.empty() && !descriptors_2.empty()) {
+    matcher.knnMatch(descriptors_1, descriptors_2, *matches, 2);
+  }
+
+  // Ratio Test
+  const float ratio_thresh = 0.8f;
+  for (size_t i = 0; i < matches->size(); i++) {
+    if ((*matches)[i].size() >= 2) {
+      if ((*matches)[i][0].distance < ratio_thresh * (*matches)[i][1].distance) {
+        good_matches->push_back((*matches)[i][0]);
+      }
+    }
+  }
+}
+\end{minted}
+
+\subsection*{lk\_feature\_tracker.cpp}
+\label{sub:lk_feature_tracker_cpp}
+
+\begin{minted}{cpp}
+#include "lk_feature_tracker.h"
+
+#include <numeric>
+#include <vector>
+
+#include <glog/logging.h>
+
+#include <opencv2/calib3d.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/video/tracking.hpp>
+
+#include <ros/ros.h>
+
+using namespace cv;
+using namespace cv::xfeatures2d;
+
+/**
+   LK feature tracker Constructor.
+*/
+LKFeatureTracker::LKFeatureTracker() {
+  // Feel free to modify if you want!
+  cv::namedWindow(window_name_, cv::WINDOW_NORMAL);
+}
+
+LKFeatureTracker::~LKFeatureTracker() {
+  // Feel free to modify if you want!
+  cv::destroyWindow(window_name_);
+}
+
+/** This is the main tracking function, given two images, it detects,
+ * describes and matches features.
+ * We will be modifying this function incrementally to plot different figures
+ * and compute different statistics.
+ @param[in] frame Current image frame
+*/
+void LKFeatureTracker::trackFeatures(const cv::Mat& frame) {
+  // 1. Initialize the keypoint container for the current frame
+  std::vector<cv::Point2f> curr_points;
+  std::vector<uchar> status;
+  std::vector<float> err;
+
+  // 2. Logical branch: initialization vs tracing
+  if (prev_corners_.empty()) {
+    cv::goodFeaturesToTrack(frame, prev_corners_, 1000, 0.01, 10);
+    
+    frame.copyTo(prev_frame_);
+  } else {
+    cv::calcOpticalFlowPyrLK(
+      prev_frame_, frame, prev_corners_, curr_points, 
+      tatus, err, cv::Size(21, 21), 3
+    );
+
+    // 3. Filter out lost points (status == 0) and out-of-bounds points
+    std::vector<cv::Point2f> good_prev;
+    std::vector<cv::Point2f> good_curr;
+
+    for (size_t i = 0; i < status.size(); i++) {
+      if (status[i]) {
+        good_prev.push_back(prev_corners_[i]);
+        good_curr.push_back(curr_points[i]);
+      }
+    }
+
+    // 4. Calculate and print the statistics
+    std::vector<uchar> inlier_mask;
+    inlierMaskComputation(good_prev, good_curr, &inlier_mask);
+    
+    int inlier_count = 0;
+    for(auto val : inlier_mask) if(val) inlier_count++;
+
+    // Log (for form filling)
+    static int frame_count = 0;
+    frame_count++;
+    if (frame_count % 10 == 0) {
+      ROS_INFO_STREAM("LK Stats: Matches: " << good_curr.size() 
+                      << " Inliers: " << inlier_count 
+                      << " Ratio: " << (double)inlier_count / good_curr.size());
+    }
+
+    // 5. Visualization
+    cv::Mat img_viz;
+    cv::cvtColor(frame, img_viz, cv::COLOR_GRAY2BGR);
+    show(img_viz, good_prev, good_curr);
+
+    // 6. Compensate Mechanism
+    if (good_curr.size() < 800) {
+      std::vector<cv::Point2f> new_points;
+      cv::Mat mask = cv::Mat::zeros(frame.size(), CV_8UC1); 
+      mask.setTo(cv::Scalar(255));
+      for(auto& p : good_curr) cv::circle(mask, p, 10, cv::Scalar(0), -1);
+
+      cv::goodFeaturesToTrack(frame, new_points, 1000 - good_curr.size(), 0.01, 10, mask);
+      good_curr.insert(good_curr.end(), new_points.begin(), new_points.end());
+    }
+
+    // 7. Refresh stats
+    prev_corners_ = good_curr;
+    frame.copyTo(prev_frame_);
+  }
+}
+
+/** Display image with tracked features from prev to curr on the image
+ * corresponding to 'frame'
+ * @param[in] frame The current image frame, to draw the feature track on
+ * @param[in] prev The previous set of keypoints
+ * @param[in] curr The set of keypoints for the current frame
+ */
+void LKFeatureTracker::show(
+  const cv::Mat& frame,
+  std::vector<cv::Point2f>& prev,
+  std::vector<cv::Point2f>& curr
+) {
+  cv::Mat viz_img = frame.clone();
+
+  for (size_t i = 0; i < curr.size(); i++) {
+    cv::line(viz_img, prev[i], curr[i], cv::Scalar(0, 255, 0), 2);
+    cv::circle(viz_img, curr[i], 3, cv::Scalar(0, 0, 255), -1);
+  }
+
+  cv::imshow(window_name_, viz_img);
+  cv::waitKey(1);
+}
+
+/** Compute Inlier Mask out of the given matched keypoints.
+ @param[in] pts1 List of keypoints detected on the first image.
+ @param[in] pts2 List of keypoints detected on the second image.
+ @param[out] inlier_mask Mask indicating inliers (1) from outliers (0).
+*/
+void LKFeatureTracker::inlierMaskComputation(
+  const std::vector<cv::Point2f>& pts1,
+  const std::vector<cv::Point2f>& pts2,
+  std::vector<uchar>* inlier_mask
+) const {
+  CHECK_NOTNULL(inlier_mask);
+
+  static constexpr double max_dist_from_epi_line_in_px = 3.0;
+  static constexpr double confidence_prob = 0.99;
+  try {
+    findFundamentalMat(
+      pts1, pts2, CV_FM_RANSAC,
+      max_dist_from_epi_line_in_px, confidence_prob,
+      *inlier_mask
+    );
+  } catch(...) {
+    ROS_WARN("Inlier Mask could not be computed, this can happen if there"
+             "are not enough features tracked.");
+  }
+}
+\end{minted}
+
+\subsection*{self\_flow.cpp}
+\label{sub:self_flow_cpp}
+
+\begin{minted}{cpp}
+#include <memory>
+#include <ros/ros.h>
+#include <image_transport/image_transport.h>
+#include <cv_bridge/cv_bridge.h>
+
+#include <opencv2/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+#include <opencv2/imgproc.hpp>
+#include <opencv2/video/tracking.hpp>
+
+using namespace std;
+
+/** imageCallback This function is called when a new image is published. */
+void imageCallback(const sensor_msgs::ImageConstPtr &msg) {
+  try {
+    cv::Mat image = cv_bridge::toCvCopy(msg, "bgr8")->image;
+
+    cv::Mat curr_gray;
+    cv::cvtColor(image, curr_gray, cv::COLOR_BGR2GRAY);
+
+    static cv::Mat prev_gray;
+
+    if (prev_gray.empty()) {
+      curr_gray.copyTo(prev_gray);
+      return;
+    }
+
+    cv::Mat flow;
+    cv::calcOpticalFlowFarneback(prev_gray, curr_gray, flow, 0.5, 3, 15, 3, 5, 1.2, 0);
+
+    std::vector<cv::Mat> flow_parts;
+    cv::split(flow, flow_parts);
+    
+    cv::Mat magnitude, angle;
+    cv::cartToPolar(flow_parts[0], flow_parts[1], magnitude, angle, true);
+
+    std::vector<cv::Mat> hsv_planes(3);
+
+    angle.convertTo(hsv_planes[0], CV_8UC1, 0.5);
+
+    hsv_planes[1] = cv::Mat(angle.size(), CV_8UC1, cv::Scalar(255));
+
+    cv::Mat v_norm;
+    cv::normalize(magnitude, v_norm, 0, 255, cv::NORM_MINMAX);
+    v_norm.convertTo(hsv_planes[2], CV_8UC1);
+
+    cv::Mat hsv;
+    cv::merge(hsv_planes, hsv); 
+
+    cv::Mat result_bgr;
+    cv::cvtColor(hsv, result_bgr, cv::COLOR_HSV2BGR);
+
+    cv::imshow("view", result_bgr);
+    cv::waitKey(1);
+
+    curr_gray.copyTo(prev_gray);
+
+  } catch (cv_bridge::Exception &e) {
+    ROS_ERROR("cv_bridge exception: %s", e.what());
+  }
+}
+
+/**
+ * @function main
+ * @brief Main function
+ */
+int main(int argc, char **argv) {
+  ros::init(argc, argv, "optical_flow");
+  ros::NodeHandle local_nh("~");
+
+  cv::namedWindow("view", cv::WINDOW_NORMAL);
+  image_transport::ImageTransport it(local_nh);
+  image_transport::Subscriber sub = it.subscribe("/images_topic", 100, imageCallback);
+
+  ros::spin();
+  cv::destroyWindow("view");
+  return EXIT_SUCCESS;
+}
+\end{minted}
