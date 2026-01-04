@@ -1,6 +1,7 @@
 \section{Individual}
 
 \subsection*{Deliverable 1 - Spy Game}
+\label{sub:a_deliverable_1_spy_game}
 
 Consider the following \href{https://www.mathworks.com/help/matlab/ref/spy.html}{\ul{spy}}-style plot of an information matrix (i.e., coefficient matrix in Gauss-Newton’s normal equations) for a landmark-based SLAM problem where dark cells correspond to non-zero blocks:
 
@@ -9,28 +10,12 @@ Consider the following \href{https://www.mathworks.com/help/matlab/ref/spy.html}
   \includegraphics[width=0.8\linewidth]{figures/spy_game2}
 \end{figure}
 
-Assuming robot poses are stored sequentially, answer the following questions:
-
-\begin{enumerate}
-  \item How many robot poses exist in this problem?
-  \item How many landmarks exist in the map?
-  \item How many landmark have been observed by the current (last) pose?
-  \item Which pose has observed the most number of landmark?
-  \item What poses have observed the 2nd landmark?
-  \item Predict the sparsity pattern of the information matrix after marginalizing out the 2nd feature.
-  \item Predict the sparsity pattern of the information matrix after marginalizing out past poses (i.e., only retaining the last pose).
-  \item Marginalizing out which variable (chosen among both poses or landmarks) would preserve the sparsity pattern of the information matrix?
-  \item The following figures illustrate the robot (poses-poses) block of the information matrix obtained after marginalizing out (eliminating) all landmarks in bundle adjustment in two different datasets. What can you say about these datasets (e.g., was robot exploring a large building? Or perhaps it was surveying a small room? etc) given the spy images~\ref{fig:spy_game_images_of_deliverable_1_9_}?
-\end{enumerate}
-
-\begin{figure*}[!t]
+\begin{figure*}[!tb]
   \normalsize
   \centering
   \includegraphics[width=0.8\linewidth]{figures/spy_game1}
   \caption{Spy game images of Deliverable 1.9.}
   \label{fig:spy_game_images_of_deliverable_1_9_}
-  \hrulefill
-  \vspace*{4pt}
 \end{figure*}
 
 \subsection*{Deliverable 2 - Well-begun is Half Done}
