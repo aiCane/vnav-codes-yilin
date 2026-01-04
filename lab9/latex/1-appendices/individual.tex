@@ -1,1 +1,109 @@
 \section{Individual}
+
+\subsection*{Deliverable 1 - Spy Game}
+
+Consider the following \href{https://www.mathworks.com/help/matlab/ref/spy.html}{\ul{spy}}-style plot of an information matrix (i.e., coefficient matrix in Gauss-Newton’s normal equations) for a landmark-based SLAM problem where dark cells correspond to non-zero blocks:
+
+\begin{figure}[!htb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/spy_game2}
+\end{figure}
+
+Assuming robot poses are stored sequentially, answer the following questions:
+
+\begin{enumerate}
+  \item How many robot poses exist in this problem?
+  \item How many landmarks exist in the map?
+  \item How many landmark have been observed by the current (last) pose?
+  \item Which pose has observed the most number of landmark?
+  \item What poses have observed the 2nd landmark?
+  \item Predict the sparsity pattern of the information matrix after marginalizing out the 2nd feature.
+  \item Predict the sparsity pattern of the information matrix after marginalizing out past poses (i.e., only retaining the last pose).
+  \item Marginalizing out which variable (chosen among both poses or landmarks) would preserve the sparsity pattern of the information matrix?
+  \item The following figures illustrate the robot (poses-poses) block of the information matrix obtained after marginalizing out (eliminating) all landmarks in bundle adjustment in two different datasets. What can you say about these datasets (e.g., was robot exploring a large building? Or perhaps it was surveying a small room? etc) given the spy images~\ref{fig:spy_game_images_of_deliverable_1_9_}?
+\end{enumerate}
+
+\begin{figure*}[!t]
+  \normalsize
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/spy_game1}
+  \caption{Spy game images of Deliverable 1.9.}
+  \label{fig:spy_game_images_of_deliverable_1_9_}
+  \hrulefill
+  \vspace*{4pt}
+\end{figure*}
+
+\subsection*{Deliverable 2 - Well-begun is Half Done}
+
+Pose graph optimization is a non-convex problem. Therefore, iterative solvers require a (good) initial guess to converge to the right solution. Typically, one initializes nonlinear solvers (e.g., Gauss-Newton) from the odometric estimate obtained by setting the first pose to the identity and chaining the odometric measurements in the pose graph.
+
+Considering that chaining more relative pose measurements (either odometry or loop closures) accumulates more noise (and provides worse initialization), propose a more accurate initialization method that also sets the first pose to the identity but chains measurements in the pose graph in a more effective way. A 1-sentence description and rationale for the proposed approach suffices.
+
+{\small \color{gray} Hint: consider a graph with an arbitrary topology. Also, think about the problem as a graph, where you fix the “root” node and initialize each node by chaining the edges from the root to that node..}
+
+\subsection*{Deliverable 3 - Feature-based methods for SLAM}
+
+Read the ORB-SLAM paper (available \href{https://vnav.mit.edu/material/ORB-SLAM.pdf}{\ul{here}}) and answer the following questions:
+
+\begin{enumerate}
+  \item Provide a 1 sentence description of each module used by ORB-SLAM (Fig. 1 in the paper can be a good starting point).
+  \item Consider the case in which the place recognition module provides an incorrect loop closure. How does ORB-SLAM check that each loop closure is correct? What happens if an incorrect loop closure is included in the pose-graph optimization module?
+\end{enumerate}
+
+\subsection*{Deliverable 4 [Optional] - Direct methods for SLAM}
+
+Read the LSD-SLAM paper (available \href{https://vnav.mit.edu/material/LSD-SLAM.pdf}{\ul{here}}, see also the introduction below before reading the paper) and answer the following questions:
+
+\begin{enumerate}
+  \item Provide a 1 sentence description of each module used by LSD-SLAM and outline similarities and differences with respect to ORB-SLAM.
+  \item Which approach (between feature-based or direct) is expected to be more robust to changes in illumination or occlusions? Motivate your answer.
+\end{enumerate}
+
+LSD-SLAM is a direct method for SLAM, as opposed to feature-based methods we have worked with previously. As you know, feature-based methods detect and match features (keypoints) in each image and then use 2-view geometry (and possibly bundle adjustment) to estimate the motion of the robot. Direct methods are different in the fact that they do not extract features, but can be easily understood using the material presented in class.
+
+In particular, the main difference is the way the 2-view geometry is solved. In feature-based approaches one uses RANSAC and a minimal solver (e.g., the 5-point method) to infer the motion from feature correspondences. In direct methods, instead, one tries to estimate the relative pose between consecutive frames by minimizing directly the mismatch of the pixel intensities between two images:
+
+\begin{equation*}
+E(\xi) = \sum_i (I_{ref}(p_i) - I(\omega(p_i, D_{ref}(p_i), \xi)))^2 = r_i(\xi)^2
+\end{equation*}
+
+Where the objective looks for a pose \(\xi\) (between the last frame \(I_{ref}\) and the current frame \(I\) that minimizes the mismatch between the intensity \(I_{ref}(pi)\) at pixel \(p_i\) for each pixel \(\) in the image, and intensity of the corresponding pixel in the current image \(I\). How do we retrieve the pixel corresponding to \(p_i\) in the current image \(I\)? In other words, what is this term?:
+
+\begin{equation*}
+I(\omega(p_i, D_{ref}(p_i), \xi))
+\end{equation*}
+
+It seems mysterious, but it’s nothing new: this simply represents a perspective projection. More specifically, given a pixel \(p_i\), if we know the corresponding depth \(D_{ref}(p_i)\) we can get a 3D point that we can then project to the current camera as a function of the relative pose. The \(\omega\) is typically called a \textbf{warp function} since it “warps” a pixel in the previous frame  into a pixel at the current frame \(I_{ref}\). What is the catch? Well.. the depth \(D_{ref}\) is unknown in practice, so you can only optimize \(E(\xi)\) if at a previous step you have some triangulation of the points in the image. In direct methods, therefore these is typically an “initialization step”: you use feature-based methods to estimate the poses of the first few frames and triangulate the corresponding points, and then you can use the optimization of \(E(\xi)\) to estimate later poses. The objective function \(E(\xi)\) is called the photometric error, which quantifies the difference in the pixel appearance in consecutive frames.
+
+\textbf{\ul{NOTE}}: \href{https://vnav.mit.edu/material/LDSO.pdf}{\ul{LDSO}} (Direct Sparse Odometry with Loop Closures) which you are going to use in Part 2 of this handout is simply an evolution of LSD-SLAM (by the same authors). We are suggesting you to read the LSD-SLAM paper since it provides a simpler introduction to direct methods, while we decided to use LDSO for the experimental part since it comes with a more recent implementation.
+
+\subsection*{Deliverable 5 [Optional] - From landmark-based SLAM to rotation estimation}
+
+Consider the landmark-based SLAM problem~\ref{eq:SLAM}:
+
+\begin{figure*}[!t]
+  \normalsize
+  \begin{equation}
+  \label{eq:SLAM}
+  \min_{t_i \in \mathbb{R}, R_i \in SO(3), p_i \in \mathbb{R}^3}
+  \sum_{(i, k) \in \epsilon_l} \|R_i^\top(p_k - t_i) - \overline{p}_{ik}\|_2^2 +
+  \sum_{(i, j) \in \epsilon_o} \|R_i^\top(t_j - t_i) - \overline{t}_{ij}\|_2^2 +
+  \|R_j - R_i \overline{R}_{ij}\|_F^2
+  \end{equation}
+  \hrulefill
+  \vspace*{4pt}
+\end{figure*}
+
+Where the goal is to compute the poses of the robot \((t_i, R_i), i = 1, \dots, N\) and the positions of point-landmarks \(p_k, k = 1, \dots, M\) given odometric measurements \((\overline{t}_{ij}, \overline{R}_{ij})\) for each odometric edge \((i, j) \in \epsilon_o\) (here \(\epsilon_o\) denotes the set of odometric edges), and landmark observations \(\overline{p}{_ik}\) of landmark \(k\) from pose \(i\) for each observation edge \((i, k) \in \epsilon_l\) (here \(\epsilon_l\) denotes the set of pose-landmark edges).
+
+\begin{itemize}
+  \item Prove the following claim: ``The optimization problem (1) can be rewritten as a nonlinear optimization over the rotations \(R_i, i = 1, \dots, N\) only.'' Provide an expression of the resulting rotation-only problem to support the proof.
+
+  {\small \color{gray} Hint: i) Euclidean norm is invariant under rotations, and (ii) translations/positions variables appear …! Consider also using a compact matrix notation to rewrite the sums in the cost function otherwise it will be tough to get an expression of the rotation-only problem.}
+
+  \item The elimination of variables discussed at the previous point largely reduces the size of the optimization problem (from 6N+3L variables to 3N variables).However, the rotation problem is not necessarily faster to solve. Discuss what can make the rotation-only problem more computationally-demanding to solve.
+
+  {\small \color{gray} Hint: What property makes optimization-based SLAM algorithms fast to solve?}
+\end{itemize}
+
+
