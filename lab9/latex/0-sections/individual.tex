@@ -4,17 +4,13 @@
 
 Assuming robot poses are stored sequentially, answer the following questions:
 
-\paragraph{How many robot poses exist in this problem?}
-Looking at the top-left quadrant, the Pose-Pose block, there are \(4\) distinct blocks along the main diagonal. This corresponds to the robot's trajectory states \(P_1, P_2, P_3, P_4\).
+\paragraph{How many robot poses exist in this problem?} Looking at the top-left quadrant, the Pose-Pose block, there are \(4\) distinct blocks along the main diagonal. This corresponds to the robot's trajectory states \(P_1, P_2, P_3, P_4\).
 
-\paragraph{How many landmarks exist in the map?}
-Looking at the bottom-right quadrant, the Landmark-Landmark block, there are \(12\) distinct square blocks along the diagonal. This corresponds to landmarks \(L_1\) through \(L_12\).
+\paragraph{How many landmarks exist in the map?} Looking at the bottom-right quadrant, the Landmark-Landmark block, there are \(12\) distinct square blocks along the diagonal. This corresponds to landmarks \(L_1\) through \(L_12\).
 
-\paragraph{How many landmarks have been observed by the current (last) pose?}
-The last pose is \emph{Pose 4}, corresponding to the \(4^{th}\) row in the block structure. Then, look at the \emph{Top-Right quadrant}, the Pose-Landmark block, specifically \emph{Row 4}. The non-zero blocks in this row align with the last \(4\) columns of the matrix. These correspond to landmarks \(L_9, L_10, L_11, L_12\). Therefore, the last pose observes \(4\) landmarks.
+\paragraph{How many landmarks have been observed by the current (last) pose?} The last pose is \emph{Pose 4}, corresponding to the \(4^{th}\) row in the block structure. Then, look at the \emph{Top-Right quadrant}, the Pose-Landmark block, specifically \emph{Row 4}. The non-zero blocks in this row align with the last \(4\) columns of the matrix. These correspond to landmarks \(L_9, L_10, L_11, L_12\). Therefore, the last pose observes \(4\) landmarks.
 
-\paragraph{Which pose has observed the most number of landmark?}
-By examining the width of the observation blocks in the Top-Right quadrant for each pose row:
+\paragraph{Which pose has observed the most number of landmark?} By examining the width of the observation blocks in the Top-Right quadrant for each pose row:
 
 \begin{itemize}
   \item Pose 1 observes \(L_1, L_2\).
@@ -24,29 +20,89 @@ By examining the width of the observation blocks in the Top-Right quadrant for e
   \item Pose 3 has the widest block, meaning it observed the most features.
 \end{itemize}
 
-\paragraph{What poses have observed the 2nd landmark?}
-Locate the column corresponding to the 2nd landmark in the Top-Right quadrant, which is the 2nd column of that block. There are non-zero entries in the rows corresponding to \emph{Pose 1} and \emph{Pose 2}. This creates the overlap that links  and  through a shared feature observation.
+\paragraph{What poses have observed the 2nd landmark?} Locate the column corresponding to the 2nd landmark in the Top-Right quadrant, which is the 2nd column of that block. There are non-zero entries in the rows corresponding to \emph{Pose 1} and \emph{Pose 2}. This creates the overlap that links  and  through a shared feature observation.
 
-\paragraph{Predict the sparsity pattern of the information matrix after marginalizing out the 2nd feature.}
-Marginalizing out a variable creates a "fill-in" between all variables that were connected to the marginalized variable.
+\paragraph{Predict the sparsity pattern of the information matrix after marginalizing out the 2nd feature.} Marginalizing out a variable creates a "fill-in" between all variables that were connected to the marginalized variable.
 
 The 2nd feature is observed by \emph{Pose 1} and \emph{Pose 2}. Eliminating \(L_2\) would create an edge between \(P_1\) and \(P_2\). However, \(P_1\) and \(P_2\) are \emph{already connected} via odometry, evident from the off-diagonal entries in the top-left Pose-Pose block. The result is the sparsity pattern of the remaining blocks generally stays the same, no new non-zero blocks are created, but the values within the existing  block will become denser. The row and column for  will be removed.
 
-\paragraph{Predict the sparsity pattern of the information matrix after marginalizing out past poses (i.e., only retaining the last pose).}
-
-Marginalizing out the trajectory \(P_1, P_2, P_3\) essentially bakes all past information into the remaining variables.
+\paragraph{Predict the sparsity pattern of the information matrix after marginalizing out past poses (i.e., only retaining the last pose).} Marginalizing out the trajectory \(P_1, P_2, P_3\) essentially bakes all past information into the remaining variables.
 
 Poses are connected to the landmarks they observed. Marginalizing a pose creates a clique among all landmarks seen by that pose and its neighbors. Because the poses form a chain and observe overlapping sets of landmarks, this process will propagate correlations through the entire map. Therefore, the resulting matrix (containing \(P_4\) and all Landmarks) will have a **fully dense block** for all landmarks observed by the marginalized poses (\(L_1\) to \(L_9\)). These landmarks will essentially become fully correlated with each other and with \(P_4\). The sparsity is destroyed for the landmark section.
 
-\paragraph{Marginalizing out which variable (chosen among both poses or landmarks) would preserve the sparsity pattern of the information matrix?}
-Landmarks
+\paragraph{Marginalizing out which variable (chosen among both poses or landmarks) would preserve the sparsity pattern of the information matrix?} Landmarks.
 
 As seen in Q7, Mmarginalizing \emph{Poses} creates dense fill-in among landmarks, destroying sparsity. Marginalizing \emph{Landmarks} only creates connections between the poses that observed that specific landmark. Since landmarks in this example are observed by consecutive poses, and those poses are already connected by odometry, marginalizing landmarks adds information to existing blocks without creating new blocks far from the diagonal. This operation results in the ``Reduced Camera Matrix'' or Pose Graph, which retains the sparse, block-tridiagonal structure of the original pose block.
 
-\paragraph{The figures in appendix~\ref{sub:a_deliverable_1_spy_game} illustrate the robot (poses-poses) block of the information matrix obtained after marginalizing out (eliminating) all landmarks in bundle adjustment in two different datasets. What can you say about these datasets (e.g., was robot exploring a large building? Or perhaps it was surveying a small room? etc) given the spy images~\ref{fig:spy_game_images_of_deliverable_1_9_}?}
-
-These images show the Pose-Pose information matrix after marginalizing out all landmarks. The density of off-diagonal elements indicates how many loop closures or shared observations exist between poses at different times.
+\paragraph{The figures in appendix~\ref{sub:a_deliverable_1_spy_game} illustrate the robot (poses-poses) block of the information matrix obtained after marginalizing out (eliminating) all landmarks in bundle adjustment in two different datasets. What can you say about these datasets (e.g., was robot exploring a large building? Or perhaps it was surveying a small room? etc) given the spy images~\ref{fig:spy_game_images_of_deliverable_1_9_}?} These images show the Pose-Pose information matrix after marginalizing out all landmarks. The density of off-diagonal elements indicates how many loop closures or shared observations exist between poses at different times.
 
 The left image depicts a ``small room'' and a ``high overlap''. The matrix is very dense with many off-diagonal entries far from the main diagonal. The robot frequently observes landmarks it has seen before, even from much earlier in the trajectory. This implies the robot is moving in a confined space (like a small room) or constantly looping back, creating strong correlations between current and past poses.
 
 While the right image illustrates a ``large building'' and ``exploration''. The matrix is sparse and band-diagonal (tridiagonal). The robot mostly only shares information with its immediate neighbors \(P_{t-1}, P_{t+1}\). It rarely re-observes old features. This implies an exploration trajectory in a large environment, like a long corridor or a city street, where the robot moves forward and does not return to previous locations.
+
+\begin{figure*}[!tb]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/spy_game1}
+  \caption{Spy game images of Deliverable 1.9.}
+  \label{fig:spy_game_images_of_deliverable_1_9_}
+  \hrulefill
+  \vspace*{4pt}
+\end{figure*}
+
+\subsection*{Deliverable 2 - Well-begun is Half Done}
+
+We propose to initialize each node by chaining the relative pose measurements along the shortest path from the root to that node in the pose graph, where the length of an edge is defined as the trace of its inverse covariance matrix, because this minimizes the accumulated uncertainty along the path and hence provides a more accurate initial guess than simply using the odometric chain.
+
+\subsection*{Deliverable 3 - Feature-based methods for SLAM}
+
+Read the ORB-SLAM paper (available \href{https://vnav.mit.edu/material/ORB-SLAM.pdf}{\ul{here}}) and answer the following questions:\cite{mur2015orb}
+
+\paragraph{Provide a 1 sentence description of each module used by ORB-SLAM (Fig. 1 in the paper can be a good starting point).}
+
+\begin{itemize}
+  \item \emph{Tracking}: Estimates the camera pose for each frame, decides when to insert a new keyframe, and performs global relocalization if tracking is lost.
+  \item \emph{Local Mapping}: Processes new keyframes, triangulates new map points, performs local bundle adjustment, and culls redundant keyframes and map points.
+  \item \emph{Loop Closing}: Detects large loops using bag-of-words place recognition, computes a similarity transformation to correct drift, and optimizes a pose graph over the Essential Graph for global consistency.
+  \item \emph{Place Recognition}: Employs a bag-of-words approach (DBoW2) to recognize previously visited places for loop detection and camera relocalization.
+  \item \emph{Map}: Stores keyframes and map points, maintains a covisibility graph and an Essential Graph, and supports local and global optimization.
+\end{itemize}
+
+\paragraph{Consider the case in which the place recognition module provides an incorrect loop closure. How does ORB-SLAM check that each loop closure is correct? What happens if an incorrect loop closure is included in the pose-graph optimization module?}
+
+When the place recognition module proposes a loop candidate, ORB-SLAM performs \emph{geometric verification} before accepting it. Using RANSAC and Horn’s method, a 7-DoF similarity transformation \(\mathbf{S}_{il}\) is estimated between the current keyframe and the loop candidate. The transformation is refined, and additional matches are searched. Only if enough inliers support the transformation is the loop accepted. The system requires \emph{three consecutive consistent loop detections}, keyframes connected in the covisibility graph to confirm a loop.
+
+If a false loop closure is mistakenly accepted and incorporated into the \emph{Essential Graph} optimization. The pose-graph optimization would propagate the incorrect constraint throughout the graph, causing significant drift and misalignment in the reconstructed map and trajectory. Bundle adjustment failure**: Subsequent global bundle adjustment (BA) may fail to converge or could worsen the error, as noted in Section VIII-E. In practice, ORB-SLAM’s stringent geometric and temporal consistency checks make such false positives rare. If one occurs, manual reset or mapping from scratch may be needed.
+
+\subsection*{Deliverable 4 [Optional] - Direct methods for SLAM}
+
+Read the LSD-SLAM paper (available \href{https://vnav.mit.edu/material/LSD-SLAM.pdf}{\ul{here}}, see also the introduction below before reading the paper) and answer the following questions:\cite{engel2014lsd}
+
+\paragraph{Provide a 1 sentence description of each module used by LSD-SLAM and outline similarities and differences with respect to ORB-SLAM.}
+LSD-SLAM consists of three modules: \emph{tracking}: direct SE(3) image alignment for camera pose estimation, \emph{depth map estimation}: filter-based semi-dense depth map creation and refinement, and \emph{map optimization}: pose-graph optimization with Sim(3) constraints for loop closure and scale drift correction. Compared to ORB-SLAM, both systems are keyframe-based and use pose graph optimization for loop closure; however, LSD-SLAM uses direct photometric alignment and semi-dense depth maps, while ORB-SLAM relies on feature-based matching and sparse bundle adjustment.
+
+\paragraph{Which approach (between feature-based or direct) is expected to be more robust to changes in illumination or occlusions? Motivate your answer.}
+Feature-based methods are generally more robust to changes in illumination or occlusions because they use descriptors designed for invariance to lighting and can handle occlusions through robust matching e.g., RANSAC, while direct methods rely on the brightness constancy assumption and are sensitive to illumination changes and occlusions.\cite{gao2018ldso}
+
+\subsection*{Deliverable 5 [Optional] - From landmark-based SLAM to rotation estimation}
+
+The landmark-based SLAM problem can be reduced to a rotation-only optimization by eliminating the translation and landmark position variables. Given the cost function~\ref{eq:SLAM}, we first rewrite the first two terms using rotation invariance of the Euclidean norm:
+
+\[
+\sum_{(i,k) \in \epsilon_l} \|p_k - t_i - R_i \overline{p}_{ik}\|_2^2 + \sum_{(i,j) \in \epsilon_o} \|t_j - t_i - R_i \overline{t}_{ij}\|_2^2.
+\]
+
+Stacking all translation and landmark variables into a vector \(x = [t_1, \dots, t_N, p_1, \dots, p_M]^\top\), these terms can be expressed as \(\|A x - d(R)\|^2\), where \(A\) is a constant sparse matrix determined by the graph structure, and \(d(R)\) is a vector depending on rotations:
+
+\[
+d(R) = [ \dots, R_i \overline{p}_{ik}, \dots, \dots, R_i \overline{t}_{ij}, \dots ]^\top.
+\]
+
+For fixed rotations, the optimal \(x^*\) minimizing \(\|A x - d(R)\|^2\) is given by \(x^* = A^\dagger d(R)\), where \(A^\dagger\) is the pseudoinverse of \(A\). Substituting back, the first two terms reduce to \(\|(I - A A^\dagger) d(R)\|^2\), which depends only on rotations. Thus, the original problem becomes:
+
+\[
+\min_{R_i \in SO(3)} \|(I - A A^\dagger) d(R)\|^2 + \sum_{(i,j) \in \epsilon_o} \|R_j - R_i \overline{R}_{ij}\|_F^2.
+\]
+
+This is a rotation-only optimization problem with \(3N\) variables.
+
+Despite the reduction in variables, the rotation-only problem can be more computationally demanding. The cost function now involves a projection term \(\|(I - A A^\dagger) d(R)\|^2\), which requires solving a linear least-squares problem for each evaluation of \(d(R)\) (i.e., for each rotation configuration). Although \(A\) is sparse, solving this inner loop repeatedly can be expensive. Moreover, the optimization over \(SO(3)\) is non-convex, and the Hessian with respect to rotations becomes dense, losing the sparsity that makes standard SLAM solvers efficient. In contrast, the original problem exploits sparsity through linearization and iterative solvers (e.g., Gauss-Newton), where variables can be efficiently marginalized (e.g., via Schur complement). Thus, the rotation-only formulation may not yield computational gains in practice.

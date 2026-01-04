@@ -1,22 +1,27 @@
 \section{Individual}
 
+\begin{figure*}[!t]
+  \normalsize
+  \begin{equation}
+  \label{eq:SLAM}
+  \min_{t_i \in \mathbb{R}, R_i \in SO(3), p_i \in \mathbb{R}^3}
+  \sum_{(i, k) \in \epsilon_l} \|R_i^\top(p_k - t_i) - \overline{p}_{ik}\|_2^2 +
+  \sum_{(i, j) \in \epsilon_o} \|R_i^\top(t_j - t_i) - \overline{t}_{ij}\|_2^2 +
+  \|R_j - R_i \overline{R}_{ij}\|_F^2
+  \end{equation}
+  \hrulefill
+  \vspace*{4pt}
+\end{figure*}
+
 \subsection*{Deliverable 1 - Spy Game}
 \label{sub:a_deliverable_1_spy_game}
 
-Consider the following \href{https://www.mathworks.com/help/matlab/ref/spy.html}{\ul{spy}}-style plot of an information matrix (i.e., coefficient matrix in Gauss-Newton’s normal equations) for a landmark-based SLAM problem where dark cells correspond to non-zero blocks:
+Consider the following \href{https://www.mathworks.com/help/matlab/ref/spy.html}{\ul{spy}}-style plot of an information matrix (i.e., coefficient matrix in Gauss-Newton’s normal equations) for a landmark-based SLAM problem where dark cells correspond to non-zero blocks:\cite{VNAV}
 
 \begin{figure}[!htb]
   \centering
   \includegraphics[width=0.8\linewidth]{figures/spy_game2}
 \end{figure}
-
-\begin{figure*}[!tb]
-  \normalsize
-  \centering
-  \includegraphics[width=0.8\linewidth]{figures/spy_game1}
-  \caption{Spy game images of Deliverable 1.9.}
-  \label{fig:spy_game_images_of_deliverable_1_9_}
-\end{figure*}
 
 \subsection*{Deliverable 2 - Well-begun is Half Done}
 
@@ -26,23 +31,7 @@ Considering that chaining more relative pose measurements (either odometry or lo
 
 {\small \color{gray} Hint: consider a graph with an arbitrary topology. Also, think about the problem as a graph, where you fix the “root” node and initialize each node by chaining the edges from the root to that node..}
 
-\subsection*{Deliverable 3 - Feature-based methods for SLAM}
-
-Read the ORB-SLAM paper (available \href{https://vnav.mit.edu/material/ORB-SLAM.pdf}{\ul{here}}) and answer the following questions:
-
-\begin{enumerate}
-  \item Provide a 1 sentence description of each module used by ORB-SLAM (Fig. 1 in the paper can be a good starting point).
-  \item Consider the case in which the place recognition module provides an incorrect loop closure. How does ORB-SLAM check that each loop closure is correct? What happens if an incorrect loop closure is included in the pose-graph optimization module?
-\end{enumerate}
-
 \subsection*{Deliverable 4 [Optional] - Direct methods for SLAM}
-
-Read the LSD-SLAM paper (available \href{https://vnav.mit.edu/material/LSD-SLAM.pdf}{\ul{here}}, see also the introduction below before reading the paper) and answer the following questions:
-
-\begin{enumerate}
-  \item Provide a 1 sentence description of each module used by LSD-SLAM and outline similarities and differences with respect to ORB-SLAM.
-  \item Which approach (between feature-based or direct) is expected to be more robust to changes in illumination or occlusions? Motivate your answer.
-\end{enumerate}
 
 LSD-SLAM is a direct method for SLAM, as opposed to feature-based methods we have worked with previously. As you know, feature-based methods detect and match features (keypoints) in each image and then use 2-view geometry (and possibly bundle adjustment) to estimate the motion of the robot. Direct methods are different in the fact that they do not extract features, but can be easily understood using the material presented in class.
 
@@ -65,19 +54,6 @@ It seems mysterious, but it’s nothing new: this simply represents a perspectiv
 \subsection*{Deliverable 5 [Optional] - From landmark-based SLAM to rotation estimation}
 
 Consider the landmark-based SLAM problem~\ref{eq:SLAM}:
-
-\begin{figure*}[!t]
-  \normalsize
-  \begin{equation}
-  \label{eq:SLAM}
-  \min_{t_i \in \mathbb{R}, R_i \in SO(3), p_i \in \mathbb{R}^3}
-  \sum_{(i, k) \in \epsilon_l} \|R_i^\top(p_k - t_i) - \overline{p}_{ik}\|_2^2 +
-  \sum_{(i, j) \in \epsilon_o} \|R_i^\top(t_j - t_i) - \overline{t}_{ij}\|_2^2 +
-  \|R_j - R_i \overline{R}_{ij}\|_F^2
-  \end{equation}
-  \hrulefill
-  \vspace*{4pt}
-\end{figure*}
 
 Where the goal is to compute the poses of the robot \((t_i, R_i), i = 1, \dots, N\) and the positions of point-landmarks \(p_k, k = 1, \dots, M\) given odometric measurements \((\overline{t}_{ij}, \overline{R}_{ij})\) for each odometric edge \((i, j) \in \epsilon_o\) (here \(\epsilon_o\) denotes the set of odometric edges), and landmark observations \(\overline{p}{_ik}\) of landmark \(k\) from pose \(i\) for each observation edge \((i, k) \in \epsilon_l\) (here \(\epsilon_l\) denotes the set of pose-landmark edges).
 
