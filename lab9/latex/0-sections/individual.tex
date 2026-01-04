@@ -1,1 +1,52 @@
 \section{Individual}
+
+\subsection*{Deliverable 1 - Spy Game}
+
+Assuming robot poses are stored sequentially, answer the following questions:
+
+\paragraph{How many robot poses exist in this problem?}
+Looking at the top-left quadrant, the Pose-Pose block, there are \(4\) distinct blocks along the main diagonal. This corresponds to the robot's trajectory states \(P_1, P_2, P_3, P_4\).
+
+\paragraph{How many landmarks exist in the map?}
+Looking at the bottom-right quadrant, the Landmark-Landmark block, there are \(12\) distinct square blocks along the diagonal. This corresponds to landmarks \(L_1\) through \(L_12\).
+
+\paragraph{How many landmarks have been observed by the current (last) pose?}
+The last pose is \emph{Pose 4}, corresponding to the \(4^{th}\) row in the block structure. Then, look at the \emph{Top-Right quadrant}, the Pose-Landmark block, specifically \emph{Row 4}. The non-zero blocks in this row align with the last \(4\) columns of the matrix. These correspond to landmarks \(L_9, L_10, L_11, L_12\). Therefore, the last pose observes \(4\) landmarks.
+
+\paragraph{Which pose has observed the most number of landmark?}
+By examining the width of the observation blocks in the Top-Right quadrant for each pose row:
+
+\begin{itemize}
+  \item Pose 1 observes \(L_1, L_2\).
+  \item Pose 2 observes \(L_2, L_3, L_4\).
+  \item Pose 3 observes \(L_4, L_5, L_6, L_7, L_8, L_9\).
+  \item Pose 4 observes \(L_9, L_10, L_11, L_12\).
+  \item Pose 3 has the widest block, meaning it observed the most features.
+\end{itemize}
+
+\paragraph{What poses have observed the 2nd landmark?}
+Locate the column corresponding to the 2nd landmark in the Top-Right quadrant, which is the 2nd column of that block. There are non-zero entries in the rows corresponding to \emph{Pose 1} and \emph{Pose 2}. This creates the overlap that links  and  through a shared feature observation.
+
+\paragraph{Predict the sparsity pattern of the information matrix after marginalizing out the 2nd feature.}
+Marginalizing out a variable creates a "fill-in" between all variables that were connected to the marginalized variable.
+
+The 2nd feature is observed by \emph{Pose 1} and \emph{Pose 2}. Eliminating \(L_2\) would create an edge between \(P_1\) and \(P_2\). However, \(P_1\) and \(P_2\) are \emph{already connected} via odometry, evident from the off-diagonal entries in the top-left Pose-Pose block. The result is the sparsity pattern of the remaining blocks generally stays the same, no new non-zero blocks are created, but the values within the existing  block will become denser. The row and column for  will be removed.
+
+\paragraph{Predict the sparsity pattern of the information matrix after marginalizing out past poses (i.e., only retaining the last pose).}
+
+Marginalizing out the trajectory \(P_1, P_2, P_3\) essentially bakes all past information into the remaining variables.
+
+Poses are connected to the landmarks they observed. Marginalizing a pose creates a clique among all landmarks seen by that pose and its neighbors. Because the poses form a chain and observe overlapping sets of landmarks, this process will propagate correlations through the entire map. Therefore, the resulting matrix (containing \(P_4\) and all Landmarks) will have a **fully dense block** for all landmarks observed by the marginalized poses (\(L_1\) to \(L_9\)). These landmarks will essentially become fully correlated with each other and with \(P_4\). The sparsity is destroyed for the landmark section.
+
+\paragraph{Marginalizing out which variable (chosen among both poses or landmarks) would preserve the sparsity pattern of the information matrix?}
+Landmarks
+
+As seen in Q7, Mmarginalizing \emph{Poses} creates dense fill-in among landmarks, destroying sparsity. Marginalizing \emph{Landmarks} only creates connections between the poses that observed that specific landmark. Since landmarks in this example are observed by consecutive poses, and those poses are already connected by odometry, marginalizing landmarks adds information to existing blocks without creating new blocks far from the diagonal. This operation results in the ``Reduced Camera Matrix'' or Pose Graph, which retains the sparse, block-tridiagonal structure of the original pose block.
+
+\paragraph{The figures in appendix~\ref{sub:a_deliverable_1_spy_game} illustrate the robot (poses-poses) block of the information matrix obtained after marginalizing out (eliminating) all landmarks in bundle adjustment in two different datasets. What can you say about these datasets (e.g., was robot exploring a large building? Or perhaps it was surveying a small room? etc) given the spy images~\ref{fig:spy_game_images_of_deliverable_1_9_}?}
+
+These images show the Pose-Pose information matrix after marginalizing out all landmarks. The density of off-diagonal elements indicates how many loop closures or shared observations exist between poses at different times.
+
+The left image depicts a ``small room'' and a ``high overlap''. The matrix is very dense with many off-diagonal entries far from the main diagonal. The robot frequently observes landmarks it has seen before, even from much earlier in the trajectory. This implies the robot is moving in a confined space (like a small room) or constantly looping back, creating strong correlations between current and past poses.
+
+While the right image illustrates a ``large building'' and ``exploration''. The matrix is sparse and band-diagonal (tridiagonal). The robot mostly only shares information with its immediate neighbors \(P_{t-1}, P_{t+1}\). It rarely re-observes old features. This implies an exploration trajectory in a large environment, like a long corridor or a city street, where the robot moves forward and does not return to previous locations.
